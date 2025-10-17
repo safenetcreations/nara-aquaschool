@@ -203,14 +203,7 @@ const Home = () => {
         <Container maxWidth="lg">
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-              <img
-                src="/logo.png"
-                alt="NARA AquaSchool"
-                style={{ height: 40 }}
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                }}
-              />
+              <Waves sx={{ fontSize: 40, color: '#667eea' }} />
               <Typography
                 variant="h6"
                 sx={{
@@ -376,18 +369,13 @@ const Home = () => {
                 <Box
                   sx={{
                     position: 'relative',
-                    height: { xs: 300, md: 500 }
+                    height: { xs: 300, md: 500 },
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
                   }}
                 >
-                  <img
-                    src="/images/hero-whale.png"
-                    alt="Blue Whale"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain'
-                    }}
-                  />
+                  <Waves sx={{ fontSize: 300, color: 'rgba(255,255,255,0.2)' }} />
                 </Box>
               </motion.div>
             </Grid>
@@ -553,15 +541,19 @@ const Home = () => {
                     transition={{ duration: 0.5 }}
                   >
                     <Box
-                      component="img"
-                      src={pillar.image}
-                      alt={pillar.title}
                       sx={{
                         width: '100%',
+                        height: 300,
                         borderRadius: 2,
-                        boxShadow: 3
+                        boxShadow: 3,
+                        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
                       }}
-                    />
+                    >
+                      <Waves sx={{ fontSize: 120, color: 'rgba(255,255,255,0.3)' }} />
+                    </Box>
                   </motion.div>
                 </Grid>
                 <Grid item xs={12} md={6}>
