@@ -207,15 +207,15 @@ function App() {
               }}
             />
             <Routes>
-              {/* Public Routes */}
+              {/* Public Routes - No Layout */}
+              <Route path="/" element={<Home />} />
               <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
               <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
               <Route path="/forgot-password" element={<ForgotPassword />} />
               <Route path="/verify-email" element={<VerifyEmail />} />
-              
-              {/* Main App Routes */}
-              <Route path="/" element={<Layout user={user} userProfile={userProfile} />}>
-                <Route index element={<Home />} />
+
+              {/* Main App Routes with Layout (Sidebar) */}
+              <Route element={<Layout user={user} userProfile={userProfile} />}>
                 
                 {/* Protected Routes */}
                 <Route element={<ProtectedRoute user={user} />}>

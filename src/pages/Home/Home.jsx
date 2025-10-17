@@ -186,6 +186,63 @@ const Home = () => {
 
   return (
     <Box>
+      {/* Top Navigation Bar */}
+      <Box
+        component="nav"
+        sx={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 1000,
+          backgroundColor: 'rgba(255,255,255,0.95)',
+          backdropFilter: 'blur(10px)',
+          boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+        }}
+      >
+        <Container maxWidth="lg">
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', py: 2 }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <img
+                src="/logo.png"
+                alt="NARA AquaSchool"
+                style={{ height: 40 }}
+                onError={(e) => {
+                  e.target.style.display = 'none';
+                }}
+              />
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: 700,
+                  background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent'
+                }}
+              >
+                NARA AquaSchool
+              </Typography>
+            </Box>
+            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+              <Button
+                color="primary"
+                onClick={() => navigate('/login')}
+                sx={{ display: { xs: 'none', sm: 'inline-flex' } }}
+              >
+                Sign In
+              </Button>
+              <Button
+                variant="contained"
+                color="primary"
+                onClick={() => navigate('/register')}
+              >
+                Get Started
+              </Button>
+            </Box>
+          </Box>
+        </Container>
+      </Box>
+
       {/* Hero Section */}
       <Box
         sx={{
@@ -194,7 +251,8 @@ const Home = () => {
           position: 'relative',
           display: 'flex',
           alignItems: 'center',
-          overflow: 'hidden'
+          overflow: 'hidden',
+          paddingTop: '80px' // Add padding for fixed navbar
         }}
       >
         {/* Animated Background */}
