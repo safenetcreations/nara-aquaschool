@@ -1,0 +1,426 @@
+// NARA Unified Platform - Firestore Security Rules
+// Supports both AquaSchool (K-12) and Nexus (Graduate/Career) platforms
+// Last Updated: October 18, 2025
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========================================
+    // HELPER FUNCTIONS
+    // ========================================
+
+    // Check if user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // Check if user owns the resource
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    // Get user document
+    function getUserData() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
+
+    // Get user type
+    function getUserType() {
+      return getUserData().type;
+    }
+
+    // Check if user has school access
+    function hasSchoolAccess() {
+      return isSignedIn() && getUserType() in ['school', 'both'];
+    }
+
+    // Check if user has nexus access
+    function hasNexusAccess() {
+      return isSignedIn() && getUserType() in ['graduate', 'both'];
+    }
+
+    // Check if user is admin
+    function isAdmin() {
+      return isSignedIn() && getUserData().role == 'admin';
+    }
+
+    // Check if user is teacher
+    function isTeacher() {
+      return isSignedIn() && getUserData().role == 'teacher';
+    }
+
+    // Check if user is employer
+    function isEmployer() {
+      return isSignedIn() && getUserData().role == 'employer';
+    }
+
+    // Check if school is verified
+    function isSchoolVerified() {
+      return isSignedIn() && getUserData().schoolVerified == true;
+    }
+
+    // ========================================
+    // SHARED COLLECTIONS
+    // ========================================
+
+    // User profiles - Master collection
+    match /users/{userId} {
+      // Anyone authenticated can read user profiles
+      allow read: if isSignedIn();
+
+      // Users can create their own profile
+      allow create: if isOwner(userId) &&
+        request.resource.data.uid == userId &&
+        request.resource.data.type in ['school', 'graduate'];
+
+      // Users can update their own profile
+      // But cannot change type or isGraduated (only admin/system can)
+      allow update: if isOwner(userId) &&
+        !request.resource.data.diff(resource.data).affectedKeys().hasAny(['type', 'isGraduated', 'role']);
+
+      // Admin can update anything
+      allow update: if isAdmin();
+
+      // Only admin can delete
+      allow delete: if isAdmin();
+    }
+
+    // ========================================
+    // AQUASCHOOL COLLECTIONS (K-12 Students)
+    // ========================================
+
+    // School profiles
+    match /schoolProfiles/{userId} {
+      allow read: if isOwner(userId) || isTeacher() || isAdmin();
+      allow create: if isOwner(userId) && hasSchoolAccess();
+      allow update: if isOwner(userId) && hasSchoolAccess();
+      allow delete: if isAdmin();
+
+      // Student progress subcollection
+      match /progress/{progressId} {
+        allow read: if isOwner(userId) || isTeacher() || isAdmin();
+        allow write: if isOwner(userId) && hasSchoolAccess();
+      }
+
+      // Student badges
+      match /badges/{badgeId} {
+        allow read: if true; // Public display
+        allow write: if isOwner(userId) || isAdmin();
+      }
+    }
+
+    // Marine species database (read-only for users)
+    match /marineSpecies/{speciesId} {
+      allow read: if true; // Public educational content
+      allow write: if isAdmin();
+    }
+
+    // Lessons
+    match /lessons/{lessonId} {
+      allow read: if hasSchoolAccess();
+      allow write: if isAdmin();
+    }
+
+    // Quizzes
+    match /quizzes/{quizId} {
+      allow read: if hasSchoolAccess();
+      allow write: if isAdmin();
+
+      // Quiz attempts
+      match /attempts/{attemptId} {
+        allow read: if isOwner(resource.data.userId) || isTeacher() || isAdmin();
+        allow create: if hasSchoolAccess() &&
+          request.resource.data.userId == request.auth.uid;
+        allow update: if false; // Immutable once created
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Citizen Science projects
+    match /citizenScience/{projectId} {
+      allow read: if true; // Public projects
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+
+      // Project submissions
+      match /submissions/{submissionId} {
+        allow read: if true; // Public contributions
+        allow create: if hasSchoolAccess();
+        allow update: if isOwner(resource.data.userId) || isAdmin();
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Field visits
+    match /fieldVisits/{visitId} {
+      allow read: if hasSchoolAccess();
+      allow create: if isTeacher() && hasSchoolAccess();
+      allow update: if isOwner(resource.data.teacherId) || isAdmin();
+      allow delete: if isAdmin();
+    }
+
+    // Challenges
+    match /challenges/{challengeId} {
+      allow read: if hasSchoolAccess();
+      allow write: if isAdmin();
+
+      // Challenge submissions
+      match /submissions/{submissionId} {
+        allow read: if true; // Public leaderboard
+        allow create: if hasSchoolAccess();
+        allow update: if isOwner(resource.data.userId) &&
+          resource.data.status == 'draft';
+        allow delete: if isOwner(resource.data.userId) &&
+          resource.data.status == 'draft';
+      }
+    }
+
+    // Schools
+    match /schools/{schoolId} {
+      allow read: if true; // Public directory
+      allow create: if isAdmin();
+      allow update: if isAdmin() ||
+        (isTeacher() && resource.data.teacherIds.hasAny([request.auth.uid]));
+      allow delete: if isAdmin();
+    }
+
+    // Ocean data (real-time monitoring)
+    match /oceanData/{dataId} {
+      allow read: if true; // Public real-time data
+      allow write: if false; // Server-side only
+    }
+
+    // ========================================
+    // NEXUS COLLECTIONS (Graduates/Career)
+    // ========================================
+
+    // Nexus profiles (professional profiles)
+    match /nexusProfiles/{userId} {
+      allow read: if isSignedIn(); // All authenticated users can see profiles
+      allow create: if isOwner(userId) && hasNexusAccess();
+      allow update: if isOwner(userId) && hasNexusAccess();
+      allow delete: if isAdmin();
+    }
+
+    // Courses (NARA Academy)
+    match /courses/{courseId} {
+      allow read: if hasNexusAccess();
+      allow create: if isAdmin();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+
+      // Course enrollments
+      match /enrollments/{enrollmentId} {
+        allow read: if isOwner(resource.data.userId) || isAdmin();
+        allow create: if hasNexusAccess() &&
+          request.resource.data.userId == request.auth.uid;
+        allow update: if isOwner(resource.data.userId) || isAdmin();
+        allow delete: if isAdmin();
+      }
+
+      // Course modules
+      match /modules/{moduleId} {
+        allow read: if hasNexusAccess();
+        allow write: if isAdmin();
+      }
+
+      // Course assignments
+      match /assignments/{assignmentId} {
+        allow read: if hasNexusAccess();
+        allow write: if isAdmin();
+
+        // Assignment submissions
+        match /submissions/{submissionId} {
+          allow read: if isOwner(resource.data.userId) || isAdmin();
+          allow create: if hasNexusAccess();
+          allow update: if isOwner(resource.data.userId);
+        }
+      }
+    }
+
+    // Internships
+    match /internships/{internshipId} {
+      allow read: if true; // Public job board
+      allow create: if isAdmin() || isEmployer();
+      allow update: if isAdmin() || isOwner(resource.data.employerId);
+      allow delete: if isAdmin();
+
+      // Internship applications
+      match /applications/{applicationId} {
+        // Applicant, employer, and admin can read
+        allow read: if isOwner(resource.data.userId) ||
+                      isOwner(get(/databases/$(database)/documents/internships/$(internshipId)).data.employerId) ||
+                      isAdmin();
+
+        // Only nexus users can apply
+        allow create: if hasNexusAccess() &&
+          request.resource.data.userId == request.auth.uid;
+
+        // Applicant can update their own application
+        allow update: if isOwner(resource.data.userId) ||
+                        isOwner(get(/databases/$(database)/documents/internships/$(internshipId)).data.employerId) ||
+                        isAdmin();
+
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Jobs (Job Board)
+    match /jobs/{jobId} {
+      allow read: if true; // Public job board
+      allow create: if isEmployer() && hasNexusAccess();
+      allow update: if isOwner(resource.data.employerId) || isAdmin();
+      allow delete: if isOwner(resource.data.employerId) || isAdmin();
+
+      // Job applications
+      match /applications/{applicationId} {
+        allow read: if isOwner(resource.data.userId) ||
+                      isOwner(get(/databases/$(database)/documents/jobs/$(jobId)).data.employerId) ||
+                      isAdmin();
+
+        allow create: if hasNexusAccess() &&
+          request.resource.data.userId == request.auth.uid;
+
+        allow update: if isOwner(resource.data.userId) ||
+                        isOwner(get(/databases/$(database)/documents/jobs/$(jobId)).data.employerId) ||
+                        isAdmin();
+
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Research datasets (Open Data Portal)
+    match /datasets/{datasetId} {
+      allow read: if true; // Open data - public access
+      allow create: if isAdmin() || hasNexusAccess();
+      allow update: if isOwner(resource.data.uploadedBy) || isAdmin();
+      allow delete: if isOwner(resource.data.uploadedBy) || isAdmin();
+
+      // Download tracking
+      match /downloads/{downloadId} {
+        allow read: if isAdmin();
+        allow create: if isSignedIn();
+        allow update, delete: if false; // Immutable logs
+      }
+    }
+
+    // Grants
+    match /grants/{grantId} {
+      allow read: if true; // Public grant opportunities
+      allow write: if isAdmin();
+
+      // Grant applications
+      match /applications/{applicationId} {
+        allow read: if isOwner(resource.data.userId) || isAdmin();
+        allow create: if hasNexusAccess();
+        allow update: if isOwner(resource.data.userId) || isAdmin();
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Innovation Hub (ideas, projects)
+    match /innovations/{innovationId} {
+      allow read: if hasNexusAccess();
+      allow create: if hasNexusAccess();
+      allow update: if isOwner(resource.data.creatorId) || isAdmin();
+      allow delete: if isOwner(resource.data.creatorId) || isAdmin();
+    }
+
+    // Mentorship programs
+    match /mentorships/{mentorshipId} {
+      allow read: if isOwner(resource.data.mentorId) ||
+                    isOwner(resource.data.menteeId) ||
+                    isAdmin();
+
+      allow create: if hasNexusAccess() &&
+        (request.resource.data.mentorId == request.auth.uid ||
+         request.resource.data.menteeId == request.auth.uid);
+
+      allow update: if isOwner(resource.data.mentorId) ||
+                      isOwner(resource.data.menteeId) ||
+                      isAdmin();
+
+      allow delete: if isAdmin();
+    }
+
+    // Events
+    match /events/{eventId} {
+      allow read: if true; // Public events
+      allow write: if isAdmin();
+
+      // Event registrations
+      match /registrations/{registrationId} {
+        allow read: if isOwner(resource.data.userId) || isAdmin();
+        allow create: if isSignedIn(); // Both school and nexus users can register
+        allow update: if isOwner(resource.data.userId) || isAdmin();
+        allow delete: if isAdmin();
+      }
+    }
+
+    // Community forums
+    match /forums/{forumId} {
+      allow read: if hasNexusAccess();
+      allow write: if isAdmin();
+
+      // Forum posts
+      match /posts/{postId} {
+        allow read: if hasNexusAccess();
+        allow create: if hasNexusAccess();
+        allow update: if isOwner(resource.data.authorId) || isAdmin();
+        allow delete: if isOwner(resource.data.authorId) || isAdmin();
+
+        // Post comments
+        match /comments/{commentId} {
+          allow read: if hasNexusAccess();
+          allow create: if hasNexusAccess();
+          allow update: if isOwner(resource.data.authorId) || isAdmin();
+          allow delete: if isOwner(resource.data.authorId) || isAdmin();
+        }
+      }
+    }
+
+    // ========================================
+    // ANALYTICS & LOGS
+    // ========================================
+
+    // Analytics (read-only for admin)
+    match /analytics/{doc} {
+      allow read: if isAdmin();
+      allow write: if false; // Server-side only
+    }
+
+    // Activity logs
+    match /logs/{logId} {
+      allow read: if isAdmin();
+      allow write: if false; // Server-side only
+    }
+
+    // ========================================
+    // ADMIN COLLECTIONS
+    // ========================================
+
+    // System settings
+    match /settings/{settingId} {
+      allow read: if isSignedIn();
+      allow write: if isAdmin();
+    }
+
+    // Notifications
+    match /notifications/{notificationId} {
+      allow read: if isOwner(resource.data.userId);
+      allow create: if false; // Server-side only
+      allow update: if isOwner(resource.data.userId); // Mark as read
+      allow delete: if isOwner(resource.data.userId) || isAdmin();
+    }
+
+    // Feedback
+    match /feedback/{feedbackId} {
+      allow read: if isAdmin();
+      allow create: if isSignedIn();
+      allow update: if isAdmin();
+      allow delete: if isAdmin();
+    }
+  }
+}

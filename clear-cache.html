@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clear NARA AquaSchool Cache</title>
+</head>
+<body>
+    <h1>Clear Cache & Reset Language</h1>
+    <button onclick="clearAll()">Clear All Data & Reload</button>
+    <script>
+        function clearAll() {
+            // Clear localStorage
+            localStorage.clear();
+            // Clear sessionStorage
+            sessionStorage.clear();
+            // Reload
+            window.location.href = 'https://nara-aquaschool.web.app';
+        }
+    </script>
+</body>
+</html>
