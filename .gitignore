@@ -28,7 +28,8 @@ firebase-debug.log
 .firebaserc
 
 # IDE
-.vscode/
+.vscode/*
+!.vscode/extensions.json
 .idea/
 *.swp
 *.swo

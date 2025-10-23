@@ -1,4 +1,3 @@
-import React from 'react';
 import {
   Box,
   Container,
@@ -20,6 +19,7 @@ import {
   PlayArrow
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 /**
  * GamesHub Component
@@ -27,78 +27,59 @@ import { useNavigate } from 'react-router-dom';
  */
 const GamesHub = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
-  const games = [
-    {
-      id: 1,
-      title: 'Species Memory Match',
-      description: 'Match marine species with their names and characteristics',
+  const gameAssets = {
+    memoryMatch: {
       icon: <Memory />,
-      difficulty: 'Easy',
-      points: 50,
       color: '#4caf50',
       image: 'https://source.unsplash.com/400x300/?fish,colorful'
     },
-    {
-      id: 2,
-      title: 'Ocean Explorer',
-      description: 'Navigate through different ocean zones and discover species',
+    oceanExplorer: {
       icon: <Explore />,
-      difficulty: 'Medium',
-      points: 100,
       color: '#2196f3',
       image: 'https://source.unsplash.com/400x300/?ocean,underwater'
     },
-    {
-      id: 3,
-      title: 'Marine Biologist Challenge',
-      description: 'Identify species, habitats, and conservation status',
+    biologistChallenge: {
       icon: <Psychology />,
-      difficulty: 'Hard',
-      points: 150,
       color: '#9c27b0',
       image: 'https://source.unsplash.com/400x300/?marine,biology'
     },
-    {
-      id: 4,
-      title: 'Wave Rider',
-      description: 'Learn about ocean currents and tides through gameplay',
+    waveRider: {
       icon: <Waves />,
-      difficulty: 'Medium',
-      points: 100,
       color: '#00bcd4',
       image: 'https://source.unsplash.com/400x300/?waves,surf'
     },
-    {
-      id: 5,
-      title: 'Coral Reef Builder',
-      description: 'Build and maintain a healthy coral reef ecosystem',
+    coralBuilder: {
       icon: <SportsEsports />,
-      difficulty: 'Medium',
-      points: 100,
       color: '#ff9800',
       image: 'https://source.unsplash.com/400x300/?coral,reef'
     },
-    {
-      id: 6,
-      title: 'Conservation Hero',
-      description: 'Make decisions to protect marine life and habitats',
+    conservationHero: {
       icon: <Psychology />,
-      difficulty: 'Hard',
-      points: 150,
       color: '#f44336',
       image: 'https://source.unsplash.com/400x300/?conservation,nature'
     }
-  ];
-
-  const getDifficultyColor = (difficulty) => {
-    const colors = {
-      Easy: 'success',
-      Medium: 'warning',
-      Hard: 'error'
-    };
-    return colors[difficulty] || 'default';
   };
+
+  const difficultyColors = {
+    easy: 'success',
+    medium: 'warning',
+    hard: 'error'
+  };
+
+  const cardContent = t('games.cards', { returnObjects: true }) || [];
+  const difficultyLabels = t('games.difficultyLabels', { returnObjects: true }) || {};
+  const playButtonLabel = t('games.playButton');
+  const comingSoon = t('games.comingSoon', { returnObjects: true }) || {};
+
+  const games = cardContent.map((card) => ({
+    ...card,
+    ...(gameAssets[card.id] || {}),
+    pointsLabel: t('games.pointsLabel', { points: card.points })
+  }));
+
+  const getDifficultyColor = (difficulty) => difficultyColors[difficulty] || 'default';
 
   return (
     <Box sx={{ backgroundColor: '#f5f7fa', minHeight: '100vh', paddingY: 4 }}>
@@ -107,10 +88,10 @@ const GamesHub = () => {
         <Box sx={{ marginBottom: 4 }}>
           <Typography variant="h3" fontWeight="bold" gutterBottom>
             <SportsEsports sx={{ fontSize: 40, verticalAlign: 'middle', marginRight: 2 }} />
-            Games Hub
+            {t('games.title')}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Learn through fun and interactive games - earn points while playing!
+            {t('games.subtitle')}
           </Typography>
         </Box>
 
@@ -160,7 +141,7 @@ const GamesHub = () => {
                     {game.icon}
                   </Box>
                   <Chip
-                    label={game.difficulty}
+                    label={difficultyLabels[game.difficulty] || game.difficulty}
                     color={getDifficultyColor(game.difficulty)}
                     size="small"
                     sx={{
@@ -181,7 +162,7 @@ const GamesHub = () => {
                   </Typography>
 
                   <Chip
-                    label={`+${game.points} points`}
+                    label={game.pointsLabel}
                     size="small"
                     color="primary"
                     sx={{ fontWeight: 'bold' }}
@@ -203,7 +184,7 @@ const GamesHub = () => {
                       }
                     }}
                   >
-                    Play Now
+                    {playButtonLabel}
                   </Button>
                 </Box>
               </Card>
@@ -224,11 +205,10 @@ const GamesHub = () => {
           }}
         >
           <Typography variant="h5" fontWeight="bold" gutterBottom>
-            More Games Coming Soon!
+            {comingSoon.title || ''}
           </Typography>
           <Typography variant="body1">
-            We're constantly developing new educational games.
-            Check back regularly for updates!
+            {comingSoon.description || ''}
           </Typography>
         </Paper>
       </Container>

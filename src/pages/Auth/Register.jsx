@@ -45,28 +45,9 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { registerUser, signInWithGoogle, USER_ROLES } from '../../services/authService';
+import { registerUser, signInWithGoogle, USER_ROLES, getSchoolsList, searchSchools } from '../../services/integratedAuthService';
 import toast from 'react-hot-toast';
-
-// Sri Lankan schools list (sample)
-const SCHOOLS = [
-  'Royal College, Colombo',
-  'Ananda College, Colombo',
-  'Nalanda College, Colombo',
-  'Visaka Vidyalaya, Colombo',
-  'Ladies College, Colombo',
-  'Trinity College, Kandy',
-  'St. Anthony\'s College, Kandy',
-  'Dharmaraja College, Kandy',
-  'Mahinda College, Galle',
-  'Richmond College, Galle',
-  'St. Peter\'s College, Colombo',
-  'Wesley College, Colombo',
-  'Zahira College, Colombo',
-  'Isipathana College, Colombo',
-  'Thurstan College, Colombo',
-  'Other'
-];
+import SchoolSelector from '../../components/SchoolSelector/SchoolSelector';
 
 const steps = ['Account Details', 'Personal Info', 'School Info'];
 
@@ -78,7 +59,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [role, setRole] = useState(USER_ROLES.STUDENT);
-  const [selectedSchool, setSelectedSchool] = useState('');
+  const [selectedSchool, setSelectedSchool] = useState(null);
   const [formData, setFormData] = useState({});
 
   const {
@@ -131,7 +112,16 @@ const Register = () => {
         firstName: data.firstName,
         lastName: data.lastName,
         role: role,
-        schoolId: selectedSchool,
+        school: selectedSchool ? {
+          id: selectedSchool.id,
+          name: selectedSchool.name,
+          province: selectedSchool.province,
+          provinceCode: selectedSchool.provinceCode,
+          district: selectedSchool.district,
+          districtCode: selectedSchool.districtCode,
+          type: selectedSchool.type,
+          medium: selectedSchool.medium
+        } : null,
         grade: data.grade || null,
         language: data.language,
         parentEmail: data.parentEmail || null
@@ -400,39 +390,18 @@ const Register = () => {
       case 2:
         return (
           <>
-            <Autocomplete
-              fullWidth
-              options={SCHOOLS}
-              value={selectedSchool}
-              onChange={(event, newValue) => setSelectedSchool(newValue)}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label="School"
-                  InputProps={{
-                    ...params.InputProps,
-                    startAdornment: (
-                      <>
-                        <InputAdornment position="start">
-                          <School />
-                        </InputAdornment>
-                        {params.InputProps.startAdornment}
-                      </>
-                    )
-                  }}
-                />
-              )}
-              sx={{ mb: 3 }}
-            />
+            <Typography variant="h6" gutterBottom sx={{ mb: 2 }}>
+              School Information
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
+              Select your school by province and district, or search directly by name
+            </Typography>
             
-            {selectedSchool === 'Other' && (
-              <TextField
-                fullWidth
-                label="Enter School Name"
-                {...register('customSchool')}
-                sx={{ mb: 3 }}
-              />
-            )}
+            <SchoolSelector
+              value={selectedSchool}
+              onChange={setSelectedSchool}
+              required
+            />
             
             {role === USER_ROLES.STUDENT && (
               <FormControl fullWidth sx={{ mb: 3 }}>

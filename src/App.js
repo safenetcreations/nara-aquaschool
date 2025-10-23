@@ -8,6 +8,9 @@ import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from './config/firebase';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './config/i18n';
+import { TwentyFirstToolbar } from '@21st-extension/toolbar-react';
+import { ReactPlugin } from '@21st-extension/react';
+import { AuthProvider } from './contexts/AuthContext';
 
 // Layout Components
 import Layout from './components/Layout/Layout';
@@ -41,12 +44,14 @@ import Challenges from './pages/Challenges/Challenges';
 
 // Student Features
 import StudentProfile from './pages/StudentProfile/StudentProfile';
+import StudentPortfolio from './pages/StudentPortfolio/StudentPortfolio';
 import Achievements from './pages/Profile/Achievements';
 import Settings from './pages/Settings/Settings';
 import Leaderboard from './pages/Leaderboard/Leaderboard';
 
 // Teacher Portal
 import TeacherDashboard from './pages/Teacher/TeacherDashboard';
+import TeacherPortfolio from './pages/TeacherPortfolio/TeacherPortfolio';
 import ClassManagement from './pages/Teacher/ClassManagement';
 import LessonPlans from './pages/Teacher/LessonPlans';
 import StudentProgress from './pages/Teacher/StudentProgress';
@@ -60,6 +65,12 @@ import AdminDashboard from './pages/Admin/AdminDashboard';
 import ContentManager from './pages/Admin/ContentManager';
 import UserManagement from './pages/Admin/UserManagement';
 import Analytics from './pages/Admin/Analytics';
+import AIContentGenerator from './pages/Admin/AIContentGenerator';
+import ImageGenerator from './pages/Admin/ImageGenerator';
+import SchoolsManager from './pages/Admin/SchoolsManager';
+
+// School Directory
+import SchoolDirectory from './pages/SchoolDirectory/SchoolDirectory';
 
 // Real-time Features
 import LiveOceanData from './pages/LiveOceanData/LiveOceanData';
@@ -70,22 +81,27 @@ import Downloads from './pages/Resources/Downloads';
 import MediaGallery from './pages/Resources/MediaGallery';
 import StudentShowcase from './pages/Resources/StudentShowcase';
 
-// Create theme
+// New Interactive Features
+import SpeciesExplorer from './pages/Interactive/SpeciesExplorer';
+import QuizBattle from './pages/Interactive/QuizBattle';
+import VirtualOceanDive from './pages/Interactive/VirtualOceanDive';
+
+// Create theme - Sri Lankan School Uniform Colors (Blue & White)
 const theme = createTheme({
   palette: {
     primary: {
-      main: '#006994', // Ocean blue
-      light: '#0084b8',
-      dark: '#004d6b',
+      main: '#1565C0', // School uniform blue
+      light: '#1976D2',
+      dark: '#0D47A1',
     },
     secondary: {
-      main: '#00a86b', // Sea green
-      light: '#00c87b',
-      dark: '#007a4d',
+      main: '#2196F3', // Light blue accent
+      light: '#42A5F5',
+      dark: '#1565C0',
     },
     background: {
-      default: '#f0f8ff', // Alice blue
-      paper: '#ffffff',
+      default: '#FFFFFF', // Pure white
+      paper: '#FAFAFA',
     },
     text: {
       primary: '#1a1a1a',
@@ -165,18 +181,22 @@ const theme = createTheme({
 });
 
 function App() {
-  const [user, loading, error] = useAuthState(auth);
+  // Handle case where Firebase/auth is not initialized
+  const [user, loading, error] = useAuthState(auth || null);
   const [userProfile, setUserProfile] = useState(null);
+  
+  // Skip auth state if Firebase is not configured
+  if (!auth) {
+    console.warn('⚠️ Firebase not configured. Running in demo mode without authentication.');
+  }
 
-  // Force English as default language on app load and clear any cached preferences
+  // Initialize language from storage or default to English
   useEffect(() => {
-    // Clear any non-English cached language
     const cachedLang = localStorage.getItem('i18nextLng');
-    if (cachedLang && cachedLang !== 'en') {
+    if (!cachedLang) {
       localStorage.setItem('i18nextLng', 'en');
+      i18n.changeLanguage('en');
     }
-    // Force change to English
-    i18n.changeLanguage('en');
   }, []);
 
   useEffect(() => {
@@ -202,10 +222,12 @@ function App() {
 
   return (
     <ErrorBoundary>
-      <I18nextProvider i18n={i18n}>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          <Router>
+      <TwentyFirstToolbar config={{ plugins: [ReactPlugin] }} />
+      <AuthProvider>
+        <I18nextProvider i18n={i18n}>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            <Router>
             <Toaster
               position="top-right"
               toastOptions={{
@@ -227,10 +249,9 @@ function App() {
 
               {/* Main App Routes with Layout (Sidebar) */}
               <Route element={<Layout user={user} userProfile={userProfile} />}>
-                
-                {/* Protected Routes */}
-                <Route element={<ProtectedRoute user={user} />}>
-                  <Route path="dashboard" element={<Dashboard userProfile={userProfile} />} />
+
+                {/* Public Routes - All students can access */}
+                <Route path="dashboard" element={<Dashboard userProfile={userProfile} />} />
                   
                   {/* Content Pillars */}
                   <Route path="marine-life">
@@ -252,27 +273,41 @@ function App() {
                     <Route index element={<NARAInAction />} />
                   </Route>
                   
+                  {/* School Directory */}
+                  <Route path="school-directory" element={<SchoolDirectory />} />
+                  
                   {/* Interactive Features */}
                   <Route path="games">
                     <Route index element={<GamesHub />} />
                   </Route>
-                  
+
                   <Route path="quiz">
                     <Route index element={<QuizCenter />} />
                   </Route>
-                  
+
                   <Route path="citizen-science">
                     <Route index element={<CitizenScience />} />
                   </Route>
-                  
+
                   <Route path="challenges">
                     <Route index element={<Challenges />} />
                   </Route>
+
+                  {/* New Interactive Learning Features */}
+                  <Route path="species-explorer" element={<SpeciesExplorer />} />
+                  <Route path="quiz-battle" element={<QuizBattle />} />
+                  <Route path="virtual-dive" element={<VirtualOceanDive />} />
 
                   {/* Profile & Achievements */}
                   <Route path="profile">
                     <Route index element={<StudentProfile />} />
                     <Route path="achievements" element={<Achievements />} />
+                  </Route>
+                  
+                  {/* Portfolio Pages */}
+                  <Route path="portfolio">
+                    <Route index element={<StudentPortfolio />} />
+                    <Route path=":userId" element={<StudentPortfolio />} />
                   </Route>
                   
                   <Route path="settings" element={<Settings />} />
@@ -304,6 +339,10 @@ function App() {
                     <Route path="class" element={<ClassManagement />} />
                     <Route path="lessons" element={<LessonPlans />} />
                     <Route path="progress" element={<StudentProgress />} />
+                    <Route path="portfolio">
+                      <Route index element={<TeacherPortfolio />} />
+                      <Route path=":teacherId" element={<TeacherPortfolio />} />
+                    </Route>
                   </Route>
 
                   {/* Admin Panel */}
@@ -312,16 +351,19 @@ function App() {
                     <Route path="content" element={<ContentManager />} />
                     <Route path="users" element={<UserManagement />} />
                     <Route path="analytics" element={<Analytics />} />
+                    <Route path="schools" element={<SchoolsManager />} />
+                    <Route path="ai-generator" element={<AIContentGenerator />} />
+                    <Route path="image-generator" element={<ImageGenerator />} />
                   </Route>
-                </Route>
               </Route>
-              
+
               {/* 404 Route */}
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </Router>
         </ThemeProvider>
       </I18nextProvider>
+      </AuthProvider>
     </ErrorBoundary>
   );
 }

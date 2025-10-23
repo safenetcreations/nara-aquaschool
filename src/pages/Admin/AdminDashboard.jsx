@@ -8,7 +8,8 @@ import {
   Typography,
   Avatar,
   LinearProgress,
-  Chip
+  Chip,
+  CircularProgress
 } from '@mui/material';
 import {
   People,
@@ -20,6 +21,10 @@ import {
 } from '@mui/icons-material';
 import { Line, Doughnut } from 'react-chartjs-2';
 import { motion } from 'framer-motion';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../../config/firebase';
+import { getAllSchools } from '../../services/schoolService';
+import toast from 'react-hot-toast';
 
 /**
  * AdminDashboard Component
@@ -27,13 +32,86 @@ import { motion } from 'framer-motion';
  */
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
-    totalUsers: 1245,
-    totalTeachers: 45,
-    totalStudents: 1200,
-    totalContent: 350,
-    activeUsers: 856,
+    totalUsers: 0,
+    totalTeachers: 0,
+    totalStudents: 0,
+    totalSchools: 0,
+    totalContent: 0,
+    activeUsers: 0,
     systemHealth: 98
   });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadRealStats();
+  }, []);
+
+  const loadRealStats = async () => {
+    try {
+      setLoading(true);
+      console.log('📊 Loading real admin stats...');
+
+      // Get all schools
+      const schools = await getAllSchools();
+      const totalSchools = schools.length;
+      const totalStudents = schools.reduce((sum, s) => sum + (s.studentCount || 0), 0);
+
+      // Get total users from Firestore
+      const usersSnapshot = await getDocs(collection(db, 'users'));
+      const totalUsers = usersSnapshot.size;
+
+      // Count teachers and students
+      const teachers = usersSnapshot.docs.filter(doc => doc.data().role === 'teacher' || doc.data().role === 'admin');
+      const totalTeachers = teachers.length;
+
+      // Get marine species count
+      const speciesSnapshot = await getDocs(collection(db, 'marine_species'));
+      const totalSpecies = speciesSnapshot.size;
+
+      // Get modules count
+      const modulesSnapshot = await getDocs(collection(db, 'modules'));
+      const totalModules = modulesSnapshot.size;
+
+      // Get quizzes count
+      const quizzesSnapshot = await getDocs(collection(db, 'quizzes'));
+      const totalQuizzes = quizzesSnapshot.size;
+
+      const totalContent = totalSpecies + totalModules + totalQuizzes;
+
+      // Calculate active users (users who logged in last 24 hours)
+      const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+      const activeUsersCount = usersSnapshot.docs.filter(doc => {
+        const lastLogin = doc.data().lastLoginAt?.toDate();
+        return lastLogin && lastLogin > oneDayAgo;
+      }).length;
+
+      setStats({
+        totalUsers,
+        totalTeachers,
+        totalStudents,
+        totalSchools,
+        totalContent,
+        activeUsers: activeUsersCount,
+        systemHealth: 98
+      });
+
+      console.log('✅ Admin stats loaded:', {
+        totalUsers,
+        totalTeachers,
+        totalStudents,
+        totalSchools,
+        totalContent,
+        activeUsers: activeUsersCount
+      });
+
+      toast.success('Dashboard stats loaded!');
+    } catch (error) {
+      console.error('❌ Error loading admin stats:', error);
+      toast.error('Failed to load stats');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const userGrowthData = {
     labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
@@ -63,6 +141,16 @@ const AdminDashboard = () => {
       }
     ]
   };
+
+  if (loading) {
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <CircularProgress size={60} />
+        </Box>
+      </Container>
+    );
+  }
 
   return (
     <Container maxWidth="lg">
@@ -109,10 +197,10 @@ const AdminDashboard = () => {
                   </Avatar>
                   <Box>
                     <Typography variant="h4" fontWeight={700}>
-                      {stats.totalTeachers}
+                      {stats.totalSchools}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Teachers
+                      Partner Schools
                     </Typography>
                   </Box>
                 </Box>

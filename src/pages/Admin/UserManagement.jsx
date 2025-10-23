@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Box,
   Container,
@@ -21,7 +21,13 @@ import {
   FormControl,
   InputLabel,
   Grid,
-  Button
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Alert
 } from '@mui/material';
 import {
   Search,
@@ -30,8 +36,11 @@ import {
   Block,
   CheckCircle,
   Email,
-  Add
+  Add,
+  Refresh
 } from '@mui/icons-material';
+import { collection, getDocs, doc, updateDoc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { db } from '../../config/firebase';
 import toast from 'react-hot-toast';
 
 /**
@@ -41,49 +50,124 @@ import toast from 'react-hot-toast';
 const UserManagement = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
+  const [stats, setStats] = useState({
+    total: 0,
+    students: 0,
+    teachers: 0,
+    admins: 0
+  });
 
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: 'Sarah Johnson',
-      email: 'sarah.j@school.com',
-      role: 'student',
-      status: 'active',
-      joinDate: '2024-01-15',
-      avatar: 'https://i.pravatar.cc/150?img=1'
-    },
-    {
-      id: 2,
-      name: 'Dr. Michael Smith',
-      email: 'michael.s@school.com',
-      role: 'teacher',
-      status: 'active',
-      joinDate: '2023-09-01',
-      avatar: 'https://i.pravatar.cc/150?img=2'
-    },
-    {
-      id: 3,
-      name: 'Admin User',
-      email: 'admin@naraaquaschool.com',
-      role: 'admin',
-      status: 'active',
-      joinDate: '2023-01-01',
-      avatar: 'https://i.pravatar.cc/150?img=3'
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      console.log('📊 Loading users from Firestore...');
+
+      const usersQuery = query(collection(db, 'users'), orderBy('createdAt', 'desc'));
+      const querySnapshot = await getDocs(usersQuery);
+      
+      const loadedUsers = [];
+      querySnapshot.forEach((doc) => {
+        const userData = doc.data();
+        loadedUsers.push({
+          id: doc.id,
+          uid: userData.uid,
+          name: userData.displayName || `${userData.firstName} ${userData.lastName}`,
+          email: userData.email,
+          role: userData.role || 'student',
+          status: userData.isBlocked ? 'blocked' : 'active',
+          joinDate: userData.createdAt?.toDate().toLocaleDateString() || 'N/A',
+          avatar: userData.avatar || null,
+          lastActive: userData.lastActive?.toDate().toLocaleDateString() || 'Never'
+        });
+      });
+
+      setUsers(loadedUsers);
+
+      // Calculate stats
+      const studentCount = loadedUsers.filter(u => u.role === 'student').length;
+      const teacherCount = loadedUsers.filter(u => u.role === 'teacher').length;
+      const adminCount = loadedUsers.filter(u => u.role === 'admin').length;
+
+      setStats({
+        total: loadedUsers.length,
+        students: studentCount,
+        teachers: teacherCount,
+        admins: adminCount
+      });
+
+      console.log('✅ Loaded', loadedUsers.length, 'users');
+      toast.success(`Loaded ${loadedUsers.length} users`);
+    } catch (error) {
+      console.error('❌ Error loading users:', error);
+      toast.error('Failed to load users');
+    } finally {
+      setLoading(false);
     }
-  ]);
-
-  const handleDeleteUser = (id) => {
-    setUsers(users.filter(u => u.id !== id));
-    toast.success('User deleted successfully');
   };
 
-  const handleToggleStatus = (id) => {
-    setUsers(users.map(u =>
-      u.id === id
-        ? { ...u, status: u.status === 'active' ? 'blocked' : 'active' }
-        : u
-    ));
-    toast.success('User status updated');
+  const confirmDeleteUser = (user) => {
+    setUserToDelete(user);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+
+    try {
+      await deleteDoc(doc(db, 'users', userToDelete.id));
+      setUsers(users.filter(u => u.id !== userToDelete.id));
+      toast.success('User deleted successfully');
+      setDeleteDialogOpen(false);
+      setUserToDelete(null);
+    } catch (error) {
+      console.error('Error deleting user:', error);
+      toast.error('Failed to delete user');
+    }
+  };
+
+  const handleToggleStatus = async (userId) => {
+    try {
+      const user = users.find(u => u.id === userId);
+      const newStatus = user.status === 'active' ? 'blocked' : 'active';
+      
+      await updateDoc(doc(db, 'users', userId), {
+        isBlocked: newStatus === 'blocked'
+      });
+
+      setUsers(users.map(u =>
+        u.id === userId ? { ...u, status: newStatus } : u
+      ));
+      
+      toast.success(`User ${newStatus === 'blocked' ? 'blocked' : 'activated'}`);
+    } catch (error) {
+      console.error('Error updating user status:', error);
+      toast.error('Failed to update user status');
+    }
+  };
+
+  const handleUpdateRole = async (userId, newRole) => {
+    try {
+      await updateDoc(doc(db, 'users', userId), {
+        role: newRole
+      });
+
+      setUsers(users.map(u =>
+        u.id === userId ? { ...u, role: newRole } : u
+      ));
+      
+      toast.success('User role updated');
+    } catch (error) {
+      console.error('Error updating user role:', error);
+      toast.error('Failed to update user role');
+    }
   };
 
   const filterUsers = () => {
@@ -116,8 +200,54 @@ const UserManagement = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <Container maxWidth="lg">
+        <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '60vh' }}>
+          <CircularProgress size={60} />
+        </Box>
+      </Container>
+    );
+  }
+
   return (
     <Container maxWidth="lg">
+      {/* Stats Cards */}
+      <Grid container spacing={2} sx={{ mb: 3 }}>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h4" fontWeight={700}>{stats.total}</Typography>
+              <Typography variant="body2" color="text.secondary">Total Users</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h4" fontWeight={700} color="success.main">{stats.students}</Typography>
+              <Typography variant="body2" color="text.secondary">Students</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h4" fontWeight={700} color="primary.main">{stats.teachers}</Typography>
+              <Typography variant="body2" color="text.secondary">Teachers</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <Card>
+            <CardContent>
+              <Typography variant="h4" fontWeight={700} color="error.main">{stats.admins}</Typography>
+              <Typography variant="body2" color="text.secondary">Admins</Typography>
+            </CardContent>
+          </Card>
+        </Grid>
+      </Grid>
+
       <Box sx={{ mb: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <Box>
           <Typography variant="h3" gutterBottom fontWeight={700}>
@@ -127,8 +257,8 @@ const UserManagement = () => {
             Manage users, roles, and permissions
           </Typography>
         </Box>
-        <Button variant="contained" startIcon={<Add />}>
-          Add User
+        <Button variant="outlined" startIcon={<Refresh />} onClick={loadUsers}>
+          Refresh
         </Button>
       </Box>
 

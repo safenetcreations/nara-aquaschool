@@ -379,6 +379,23 @@ const createSchoolProfile = async (uid, data) => {
     const profileRef = doc(db, 'schoolProfiles', uid);
     await setDoc(profileRef, schoolProfile);
 
+    // Increment school counts in Firebase (if school is selected)
+    if (data.schoolId) {
+      try {
+        // Import dynamically to avoid circular dependency
+        const { incrementStudentCount, incrementTeacherCount } = await import('./schoolService');
+        
+        if (data.role === USER_ROLES.STUDENT) {
+          await incrementStudentCount(data.schoolId);
+        } else if (data.role === USER_ROLES.TEACHER) {
+          await incrementTeacherCount(data.schoolId);
+        }
+      } catch (err) {
+        console.log('Could not increment school count:', err);
+        // Don't fail registration if school count update fails
+      }
+    }
+
     return profileRef; // Return reference for linking to user doc
   } catch (error) {
     console.error('Error creating school profile:', error);

@@ -1,5 +1,5 @@
 // src/pages/MarineLife/MarineLife.jsx - Marine Life exploration page
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Box,
@@ -65,7 +65,15 @@ import {
   CONSERVATION_STATUS,
   HABITATS
 } from '../../services/marineSpeciesService';
+import { REAL_SL_MARINE_SPECIES, getSpeciesByCategory } from '../../data/realMarineSpecies';
+import { GRADE_SPECIFIC_MARINE_SPECIES, getSpeciesContentByGrade, getAllSpeciesForGrade } from '../../data/gradeSpecificMarineContent';
+import { getGradeLevel, getDifficultyLevel, getGradeAppropriateText } from '../../utils/gradeContentAdapter';
+import { auth } from '../../config/firebase';
+import { getUserProfile } from '../../services/authService';
 import toast from 'react-hot-toast';
+import { MARINE_GRADE_MODULES, getGradeBandByGrade } from '../../data/marineLearningModules';
+import { VERIFIED_SL_STATS } from '../../data/verifiedStats';
+import { getAllSpeciesImages, getSpeciesImage } from '../../services/speciesImageService';
 
 const MarineLife = () => {
   const navigate = useNavigate();
@@ -82,127 +90,138 @@ const MarineLife = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [featuredSpecies, setFeaturedSpecies] = useState(null);
   const [tabValue, setTabValue] = useState(0);
+  const [userGrade, setUserGrade] = useState(7); // Default to grade 7
+  const [gradeLevel, setGradeLevel] = useState(null);
+  const [selectedGradeBand, setSelectedGradeBand] = useState('grade56');
+  const [speciesImages, setSpeciesImages] = useState({}); // Store uploaded images
+  const [imagesLoading, setImagesLoading] = useState(false);
+  const marineStats = VERIFIED_SL_STATS.marine;
+
+  const heroStats = useMemo(
+    () => [
+      { key: 'total', value: marineStats.totalSpecies, label: t('marine.stats.totalSpecies') },
+      { key: 'coral', value: marineStats.coral, label: t('marine.stats.coralSpecies') },
+      { key: 'mammals', value: marineStats.mammals, label: t('marine.stats.marineMammals') }
+    ],
+    [t]
+  );
+
+  const localize = (value) => {
+    if (!value) return '';
+    if (typeof value === 'string') return value;
+    const lang = i18n.language || 'en';
+    return value[lang] || value.en || Object.values(value)[0] || '';
+  };
+
+  const gradeModule = useMemo(
+    () => MARINE_GRADE_MODULES.find((module) => module.id === selectedGradeBand) || MARINE_GRADE_MODULES[0],
+    [selectedGradeBand]
+  );
+
+  const spotlightSpecies = useMemo(
+    () =>
+      (gradeModule?.spotlightSpecies || [])
+        .map((id) => REAL_SL_MARINE_SPECIES.find((item) => item.id === id))
+        .filter(Boolean),
+    [gradeModule]
+  );
+
+  useEffect(() => {
+    loadUserGrade();
+    loadSpeciesImages();
+  }, []);
 
   useEffect(() => {
     loadSpecies();
     loadFeaturedSpecies();
-  }, [selectedCategory, selectedHabitat, page]);
+  }, [selectedCategory, selectedHabitat, page, userGrade]);
+
+  useEffect(() => {
+    if (userGrade) {
+      setGradeLevel(getGradeLevel(userGrade));
+      setSelectedGradeBand(getGradeBandByGrade(userGrade));
+    }
+  }, [userGrade]);
+
+  const loadUserGrade = async () => {
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const profile = await getUserProfile(user.uid);
+        if (profile && profile.grade) {
+          setUserGrade(parseInt(profile.grade));
+        }
+      }
+    } catch (error) {
+      console.log('Using default grade');
+    }
+  };
+
+  const loadSpeciesImages = async () => {
+    try {
+      setImagesLoading(true);
+      console.log('🖼️ Loading species images from Firestore...');
+
+      const allImages = await getAllSpeciesImages();
+      console.log('✅ Loaded species images:', allImages);
+
+      // Create a map of species name -> image data
+      const imageMap = {};
+      allImages.forEach(imageData => {
+        if (imageData.speciesName && imageData.imageUrl) {
+          imageMap[imageData.speciesName] = imageData;
+        }
+      });
+
+      setSpeciesImages(imageMap);
+      console.log('📊 Species images map:', imageMap);
+
+      if (allImages.length > 0) {
+        toast.success(`Loaded ${allImages.length} AI-generated images!`);
+      }
+    } catch (error) {
+      console.error('❌ Error loading species images:', error);
+      toast.error('Failed to load species images');
+    } finally {
+      setImagesLoading(false);
+    }
+  };
 
   const loadSpecies = async () => {
     try {
       setLoading(true);
       
-      let result;
-      if (selectedHabitat !== 'all') {
-        result = await getSpeciesByHabitat(selectedHabitat);
-        setSpecies(result);
-        setTotalPages(Math.ceil(result.length / 12));
-      } else if (selectedCategory !== 'all') {
-        result = await getSpecies(selectedCategory, null, 12);
-        setSpecies(result.species);
-        setTotalPages(5); // Mock pagination
-      } else {
-        result = await getSpecies(null, null, 12);
-        setSpecies(result.species || []);
-        setTotalPages(5); // Mock pagination
+      // Use real verified species data
+      let filteredSpecies = [...REAL_SL_MARINE_SPECIES];
+      
+      // Filter by category
+      if (selectedCategory !== 'all') {
+        filteredSpecies = getSpeciesByCategory(selectedCategory);
       }
       
-      // If no real data, create mock data
-      if (!species.length) {
-        setSpecies(generateMockSpecies());
+      // Filter by habitat
+      if (selectedHabitat !== 'all') {
+        filteredSpecies = filteredSpecies.filter(s => 
+          s.habitat && s.habitat.includes(selectedHabitat)
+        );
       }
+      
+      setSpecies(filteredSpecies);
+      setTotalPages(Math.ceil(filteredSpecies.length / 12));
     } catch (error) {
       console.error('Error loading species:', error);
       toast.error('Failed to load species data');
-      setSpecies(generateMockSpecies());
     } finally {
       setLoading(false);
     }
   };
 
   const loadFeaturedSpecies = () => {
-    // Mock featured species
-    setFeaturedSpecies({
-      id: 'blue-whale',
-      scientificName: 'Balaenoptera musculus',
-      commonName: {
-        en: 'Blue Whale',
-        si: 'නිල් තිමිංගලා',
-        ta: 'நீல திமிங்கலம்'
-      },
-      description: 'The largest animal ever known to have lived on Earth. Sri Lankan waters are one of the best places in the world to see blue whales.',
-      conservationStatus: 'endangered',
-      image: '/images/blue-whale.jpg',
-      funFact: 'A blue whale\'s heart alone can weigh as much as an automobile!'
-    });
-  };
-
-  const generateMockSpecies = () => {
-    // Generate mock species for demonstration
-    const mockSpecies = [
-      {
-        id: 'clownfish',
-        commonName: { en: 'Clownfish', si: 'විහිළු මාළුවා', ta: 'கோமாளி மீன்' },
-        scientificName: 'Amphiprioninae',
-        category: 'fish',
-        habitat: ['coral_reef'],
-        conservationStatus: 'least_concern',
-        image: '/images/clownfish.jpg',
-        description: 'Famous for their symbiotic relationship with sea anemones'
-      },
-      {
-        id: 'sea-turtle',
-        commonName: { en: 'Green Sea Turtle', si: 'කොළ මුහුදු කැස්බෑවා', ta: 'பச்சை கடல் ஆமை' },
-        scientificName: 'Chelonia mydas',
-        category: 'reptiles',
-        habitat: ['coral_reef', 'seagrass'],
-        conservationStatus: 'endangered',
-        image: '/images/sea-turtle.jpg',
-        description: 'Five species of sea turtles nest on Sri Lankan beaches'
-      },
-      {
-        id: 'spinner-dolphin',
-        commonName: { en: 'Spinner Dolphin', si: 'කැරකෙන ඩොල්ෆින්', ta: 'சுழலும் டால்பின்' },
-        scientificName: 'Stenella longirostris',
-        category: 'mammals',
-        habitat: ['open_ocean'],
-        conservationStatus: 'least_concern',
-        image: '/images/spinner-dolphin.jpg',
-        description: 'Known for their acrobatic displays and spinning leaps'
-      },
-      {
-        id: 'lionfish',
-        commonName: { en: 'Lionfish', si: 'සිංහ මාළුවා', ta: 'சிங்க மீன்' },
-        scientificName: 'Pterois',
-        category: 'fish',
-        habitat: ['coral_reef', 'rocky_shore'],
-        conservationStatus: 'least_concern',
-        image: '/images/lionfish.jpg',
-        description: 'Venomous fish with distinctive warning coloration'
-      },
-      {
-        id: 'manta-ray',
-        commonName: { en: 'Manta Ray', si: 'මැන්ටා වදුරා', ta: 'மாண்டா ரே' },
-        scientificName: 'Mobula birostris',
-        category: 'fish',
-        habitat: ['open_ocean'],
-        conservationStatus: 'vulnerable',
-        image: '/images/manta-ray.jpg',
-        description: 'Gentle giants that feed on plankton'
-      },
-      {
-        id: 'whale-shark',
-        commonName: { en: 'Whale Shark', si: 'තල්මහ මෝරා', ta: 'திமிங்கல சுறா' },
-        scientificName: 'Rhincodon typus',
-        category: 'fish',
-        habitat: ['open_ocean'],
-        conservationStatus: 'endangered',
-        image: '/images/whale-shark.jpg',
-        description: 'The largest fish in the ocean, completely harmless to humans'
-      }
-    ];
-    
-    return mockSpecies;
+    // Use real Blue Whale data - the flagship species
+    const blueWhale = REAL_SL_MARINE_SPECIES.find(s => s.id === 'blue-whale');
+    if (blueWhale) {
+      setFeaturedSpecies(blueWhale);
+    }
   };
 
   const handleSearch = async (e) => {
@@ -210,10 +229,22 @@ const MarineLife = () => {
     if (searchTerm.trim()) {
       setLoading(true);
       try {
-        const results = await searchSpecies(searchTerm);
-        setSpecies(results.length ? results : generateMockSpecies());
-        if (!results.length) {
-          toast.info('No species found. Showing suggestions.');
+        const searchLower = searchTerm.toLowerCase();
+        // Search through real species data
+        const results = REAL_SL_MARINE_SPECIES.filter(species => 
+          species.commonName.en.toLowerCase().includes(searchLower) ||
+          species.commonName.si?.includes(searchTerm) ||
+          species.commonName.ta?.includes(searchTerm) ||
+          species.scientificName.toLowerCase().includes(searchLower) ||
+          species.description[i18n.language]?.toLowerCase().includes(searchLower) ||
+          species.description.en.toLowerCase().includes(searchLower)
+        );
+        
+        setSpecies(results);
+        if (results.length === 0) {
+          toast.info(t('marine.noResults') || 'No species found matching your search.');
+        } else {
+          toast.success(`Found ${results.length} species`);
         }
       } catch (error) {
         console.error('Search error:', error);
@@ -253,6 +284,14 @@ const MarineLife = () => {
     return colors[status] || '#808080';
   };
 
+  const formatStatus = (status) => {
+    if (!status) return '';
+    return status
+      .split('_')
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
+  };
+
   const getHabitatIcon = (habitat) => {
     const icons = {
       coral_reef: '🪸',
@@ -265,6 +304,20 @@ const MarineLife = () => {
       estuary: '🏞️'
     };
     return icons[habitat] || '💧';
+  };
+
+  // Get AI-generated image for a species, or use default
+  const getSpeciesImageUrl = (species) => {
+    const commonName = species.commonName?.en || species.commonName;
+    const imageData = speciesImages[commonName];
+
+    if (imageData && imageData.imageUrl) {
+      console.log(`🖼️ Using AI-generated image for ${commonName}:`, imageData.imageUrl);
+      return imageData.imageUrl;
+    }
+
+    // Fallback to species.image or placeholder
+    return species.image || '/images/placeholder-ocean.jpg';
   };
 
   return (
@@ -292,7 +345,7 @@ const MarineLife = () => {
                   {t('marine.title')}
                 </Typography>
                 <Typography variant="h5" sx={{ opacity: 0.9, mb: 3 }}>
-                  Explore Sri Lanka's Marine Biodiversity
+                  {t('marine.subtitle')}
                 </Typography>
                 
                 {/* Search Bar */}
@@ -330,18 +383,16 @@ const MarineLife = () => {
                 
                 {/* Quick Stats */}
                 <Grid container spacing={2}>
-                  <Grid item xs={6}>
-                    <Paper sx={{ p: 2, backgroundColor: 'rgba(255,255,255,0.1)' }}>
-                      <Typography variant="h4" fontWeight={700}>500+</Typography>
-                      <Typography variant="body2">Marine Species</Typography>
-                    </Paper>
-                  </Grid>
-                  <Grid item xs={6}>
-                    <Paper sx={{ p: 2, backgroundColor: 'rgba(255,255,255,0.1)' }}>
-                      <Typography variant="h4" fontWeight={700}>5</Typography>
-                      <Typography variant="body2">Sea Turtle Species</Typography>
-                    </Paper>
-                  </Grid>
+                  {heroStats.map((stat) => (
+                    <Grid item xs={12} sm={4} key={stat.key}>
+                      <Paper sx={{ p: 2, backgroundColor: 'rgba(255,255,255,0.12)' }}>
+                        <Typography variant="h4" fontWeight={700}>
+                          {stat.value}
+                        </Typography>
+                        <Typography variant="body2">{stat.label}</Typography>
+                      </Paper>
+                    </Grid>
+                  ))}
                 </Grid>
               </motion.div>
             </Grid>
@@ -365,7 +416,7 @@ const MarineLife = () => {
                     <CardMedia
                       component="img"
                       height="250"
-                      image={featuredSpecies.image || '/images/placeholder-ocean.jpg'}
+                      image={getSpeciesImageUrl(featuredSpecies)}
                       alt={featuredSpecies.commonName.en}
                     />
                     <CardContent>
@@ -386,7 +437,7 @@ const MarineLife = () => {
                         <em>{featuredSpecies.scientificName}</em>
                       </Typography>
                       <Typography variant="body2" color="text.secondary">
-                        {featuredSpecies.description}
+                        {featuredSpecies.description[i18n.language] || featuredSpecies.description.en}
                       </Typography>
                       {featuredSpecies.funFact && (
                         <Box sx={{ mt: 2, p: 1, backgroundColor: '#f0f8ff', borderRadius: 1 }}>
@@ -447,7 +498,17 @@ const MarineLife = () => {
               </Box>
             </Grid>
             <Grid item xs={12} md={4}>
-              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+              <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                {/* Grade Level Selector */}
+                {gradeLevel && (
+                  <Chip
+                    label={`${gradeLevel.icon} ${gradeLevel.label}`}
+                    color="primary"
+                    variant="outlined"
+                    onClick={() => setSelectedGradeBand(getGradeBandByGrade(userGrade))}
+                    sx={{ fontWeight: 600 }}
+                  />
+                )}
                 <Button
                   startIcon={<FilterList />}
                   onClick={(e) => setFilterAnchor(e.currentTarget)}
@@ -617,6 +678,178 @@ const MarineLife = () => {
           </Grid>
         </Grid>
 
+        {gradeModule && (
+          <Paper sx={{ p: { xs: 2, md: 3 }, mb: 4 }}>
+            <Box
+              sx={{
+                display: 'flex',
+                flexDirection: { xs: 'column', md: 'row' },
+                justifyContent: 'space-between',
+                alignItems: { xs: 'flex-start', md: 'center' },
+                gap: 2,
+                mb: 3
+              }}
+            >
+              <Box sx={{ maxWidth: { md: '60%' } }}>
+                <Typography variant="h4" fontWeight={700} gutterBottom>
+                  {t('marine.gradeExplorer.title')}
+                </Typography>
+                <Typography variant="body1" color="text.secondary">
+                  {localize(gradeModule.summary)}
+                </Typography>
+              </Box>
+              <ToggleButtonGroup
+                size="small"
+                exclusive
+                value={selectedGradeBand}
+                onChange={(_, value) => value && setSelectedGradeBand(value)}
+              >
+                {MARINE_GRADE_MODULES.map((module) => (
+                  <ToggleButton key={module.id} value={module.id}>
+                    {localize(module.label)}
+                  </ToggleButton>
+                ))}
+              </ToggleButtonGroup>
+            </Box>
+
+            <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+              {t('marine.gradeExplorer.focusHeading')}
+            </Typography>
+            <Grid container spacing={2} sx={{ mb: 3 }}>
+              {gradeModule.focusAreas.map((area, idx) => (
+                <Grid item xs={12} md={4} key={`${gradeModule.id}-focus-${idx}`}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      p: 2,
+                      height: '100%',
+                      backgroundColor: '#f0f8ff',
+                      borderRadius: 2
+                    }}
+                  >
+                    <Typography variant="h3" sx={{ mb: 1 }}>
+                      {area.icon}
+                    </Typography>
+                    <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+                      {localize(area.title)}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      {localize(area.description)}
+                    </Typography>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+
+            <Grid container spacing={3} sx={{ mb: 3 }}>
+              <Grid item xs={12} md={6}>
+                <Typography variant="h6" fontWeight={600} gutterBottom>
+                  {t('marine.gradeExplorer.goalsHeading')}
+                </Typography>
+                <List dense>
+                  {gradeModule.learningGoals.map((goal, idx) => (
+                    <ListItem key={`${gradeModule.id}-goal-${idx}`}>
+                      <ListItemAvatar>
+                        <Avatar
+                          sx={{
+                            bgcolor: 'primary.main',
+                            width: 32,
+                            height: 32,
+                            fontSize: 16
+                          }}
+                        >
+                          ⭐
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText primary={localize(goal)} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <Typography variant="h6" fontWeight={600} gutterBottom>
+                  {t('marine.gradeExplorer.activityHeading')}
+                </Typography>
+                <List dense>
+                  {gradeModule.activities.map((activity, idx) => (
+                    <ListItem key={`${gradeModule.id}-activity-${idx}`}>
+                      <ListItemAvatar>
+                        <Avatar
+                          sx={{
+                            bgcolor: 'secondary.main',
+                            width: 32,
+                            height: 32,
+                            fontSize: 16
+                          }}
+                        >
+                          🌊
+                        </Avatar>
+                      </ListItemAvatar>
+                      <ListItemText primary={localize(activity)} />
+                    </ListItem>
+                  ))}
+                </List>
+              </Grid>
+            </Grid>
+
+            <Typography variant="h6" fontWeight={600} sx={{ mb: 2 }}>
+              {t('marine.gradeExplorer.speciesHeading')}
+            </Typography>
+            <Grid container spacing={2}>
+              {spotlightSpecies.map((sp) => (
+                <Grid item xs={12} sm={6} md={4} key={`${gradeModule.id}-${sp.id}`}>
+                  <Paper
+                    elevation={1}
+                    sx={{
+                      p: 2,
+                      height: '100%',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s',
+                      '&:hover': { boxShadow: 4, transform: 'translateY(-4px)' }
+                    }}
+                    onClick={() => navigate(`/marine-life/species/${sp.id}`)}
+                  >
+                    <Typography variant="subtitle2" color="text.secondary">
+                      <em>{sp.scientificName}</em>
+                    </Typography>
+                    <Typography variant="h6" fontWeight={600} sx={{ mb: 1 }}>
+                      {sp.commonName[i18n.language] || sp.commonName.en}
+                    </Typography>
+                    <Chip
+                      size="small"
+                      label={formatStatus(sp.conservationStatus)}
+                      sx={{
+                        backgroundColor: getConservationColor(sp.conservationStatus),
+                        color: 'white',
+                        mb: 1
+                      }}
+                    />
+                    {(() => {
+                      const description = sp.description[i18n.language] || sp.description.en || '';
+                      const truncated = description.length > 180 ? `${description.slice(0, 180)}…` : description;
+                      return (
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          {truncated}
+                        </Typography>
+                      );
+                    })()}
+                    <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                      {sp.habitat?.slice(0, 3).map((habitat) => (
+                        <Chip
+                          key={`${sp.id}-${habitat}`}
+                          size="small"
+                          label={habitat.replace('_', ' ')}
+                          variant="outlined"
+                        />
+                      ))}
+                    </Box>
+                  </Paper>
+                </Grid>
+              ))}
+            </Grid>
+          </Paper>
+        )}
+
         {/* Species Grid/List */}
         {loading ? (
           <Grid container spacing={3}>
@@ -656,7 +889,7 @@ const MarineLife = () => {
                           <CardMedia
                             component="img"
                             height="200"
-                            image={item.image || '/images/placeholder-ocean.jpg'}
+                            image={getSpeciesImageUrl(item)}
                             alt={item.commonName.en}
                             sx={{ objectFit: 'cover' }}
                           />
@@ -673,8 +906,20 @@ const MarineLife = () => {
                               <em>{item.scientificName}</em>
                             </Typography>
                             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                              {item.description}
+                              {item.description[i18n.language] || item.description.en}
                             </Typography>
+                            <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', mb: 1 }}>
+                              {/* Difficulty Badge based on grade */}
+                              {gradeLevel && (
+                                <Chip
+                                  size="small"
+                                  label={`${gradeLevel.icon} ${gradeLevel.difficulty.toUpperCase()}`}
+                                  color="info"
+                                  variant="filled"
+                                  sx={{ fontWeight: 600 }}
+                                />
+                              )}
+                            </Box>
                             <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
                               {item.habitat?.map(h => (
                                 <Chip
@@ -711,7 +956,7 @@ const MarineLife = () => {
                       <ListItemAvatar>
                         <Avatar
                           sx={{ width: 80, height: 80, mr: 2 }}
-                          src={item.image || '/images/placeholder-ocean.jpg'}
+                          src={getSpeciesImageUrl(item)}
                         />
                       </ListItemAvatar>
                       <ListItemText
@@ -731,7 +976,7 @@ const MarineLife = () => {
                               <em>{item.scientificName}</em>
                             </Typography>
                             <br />
-                            {item.description}
+                            {item.description[i18n.language] || item.description.en}
                             <Box sx={{ mt: 1 }}>
                               {item.habitat?.map(h => (
                                 <Chip

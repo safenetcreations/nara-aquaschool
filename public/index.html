@@ -17,7 +17,35 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <!-- Leaflet CSS for Interactive Maps -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+      crossorigin=""
+    />
     <title>NARA AquaSchool | Marine Science Education</title>
+    <script>
+      // FORCE ENGLISH DEFAULT - Clear bad language cache
+      (function() {
+        try {
+          var lang = localStorage.getItem('i18nextLng');
+          
+          // ALWAYS clear and reset to English on EVERY page load
+          // This ensures Tamil cache bug is fixed immediately
+          localStorage.removeItem('i18nextLng');
+          localStorage.removeItem('i18next.lng');
+          sessionStorage.clear();
+          
+          // Set to English
+          localStorage.setItem('i18nextLng', 'en');
+          
+          console.log('✅ Language set to English');
+        } catch(e) {
+          console.error('Language reset error:', e);
+        }
+      })();
+    </script>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>

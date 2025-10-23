@@ -28,7 +28,7 @@ import {
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useForm } from 'react-hook-form';
-import { signInUser, signInWithGoogle } from '../../services/authService';
+import { loginUser, signInWithGoogle } from '../../services/integratedAuthService';
 import toast from 'react-hot-toast';
 
 const Login = () => {
@@ -49,10 +49,10 @@ const Login = () => {
     setError('');
     
     try {
-      const result = await signInUser(data.email, data.password);
+      const result = await loginUser(data.email, data.password);
       
-      if (result.success) {
-        toast.success('Welcome back!');
+      if (result.user) {
+        toast.success(`Welcome back, ${result.profile.displayName}!`);
         
         // Store remember me preference
         if (rememberMe) {

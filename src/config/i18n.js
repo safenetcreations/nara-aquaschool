@@ -1,7 +1,8 @@
 // src/config/i18n.js - Internationalization configuration
+/* eslint-disable */
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
-import LanguageDetector from 'i18next-browser-languagedetector';
+// Supports English (default), Sinhala, and Tamil
 
 // Translation resources
 const resources = {
@@ -45,7 +46,11 @@ const resources = {
         adminDashboard: 'Admin Dashboard',
         contentManager: 'Content Manager',
         userManagement: 'User Management',
-        analytics: 'Analytics'
+        analytics: 'Analytics',
+        schoolsManager: 'Schools Manager',
+        aiContentGenerator: 'AI Content Generator',
+        imageGenerator: 'Image Generator',
+        schoolDirectory: 'School Directory'
       },
       
       // Common
@@ -235,9 +240,66 @@ const resources = {
         }
       },
       
+      // School Directory
+      schoolDirectory: {
+        title: 'School Directory',
+        subtitle: 'Discover NARA AquaSchool partner schools across Sri Lanka',
+        searchPlaceholder: 'Search schools...',
+        filters: {
+          province: 'Province',
+          district: 'District',
+          allProvinces: 'All Provinces',
+          allDistricts: 'All Districts'
+        },
+        sort: {
+          label: 'Sort By',
+          name: 'Name',
+          students: 'Students',
+          year: 'Year'
+        },
+        stats: {
+          schools: 'Partner Schools',
+          students: 'Students Reached',
+          districts: 'Districts',
+          avgStudents: 'Avg Students'
+        },
+        views: {
+          grid: 'Grid View',
+          list: 'List View',
+          map: 'Map View'
+        },
+        table: {
+          name: 'School Name',
+          type: 'Type',
+          district: 'District',
+          grades: 'Grades',
+          medium: 'Medium',
+          students: 'Students'
+        },
+        card: {
+          grades: 'Grades',
+          students: 'students'
+        },
+        mapView: {
+          title: 'Interactive School Map',
+          description: 'View schools across Sri Lanka on an interactive map',
+          comingSoon: 'Google Maps integration coming soon'
+        },
+        download: 'Download Excel',
+        downloadSuccess: 'School directory downloaded successfully!',
+        clearFilters: 'Clear',
+        resultsCount: 'Showing {{count}} of {{total}} schools',
+        noResults: 'No schools found matching your criteria',
+        errors: {
+          loadFailed: 'Failed to load schools',
+          downloadFailed: 'Failed to download directory'
+        }
+      },
+      
       // Marine Life
       marine: {
         title: 'Marine Life',
+        subtitle: "Explore Sri Lanka's Marine Biodiversity",
         species: 'Species',
         habitat: 'Habitat',
         conservation: 'Conservation Status',
@@ -250,6 +312,7 @@ const resources = {
         exploreSpecies: 'Explore Species',
         searchSpecies: 'Search species...',
         categories: {
+          all: 'All Species',
           fish: 'Fish',
           mammals: 'Marine Mammals',
           reptiles: 'Reptiles',
@@ -257,23 +320,277 @@ const resources = {
           coral: 'Coral',
           plants: 'Marine Plants',
           birds: 'Seabirds'
+        },
+        stats: {
+          totalSpecies: 'Recorded marine species',
+          coralSpecies: 'Coral species documented',
+          marineMammals: 'Marine mammal species in Sri Lanka'
+        },
+        gradeExplorer: {
+          title: 'Grade Explorer',
+          description: 'Choose your class to unlock curated modules, activities, and Sri Lankan species spotlights.',
+          focusHeading: 'Focus Topics',
+          goalsHeading: 'Learning Goals',
+          activityHeading: 'Hands-on Ideas',
+          speciesHeading: 'Spotlight Species'
+        }
+      },
+      
+      // Freshwater
+      freshwater: {
+        title: 'Sri Lankan Freshwater Atlas',
+        subtitle: 'Accurate field data on rivers, reservoirs, wetlands, and waterfalls for classroom explorers.',
+        mapSection: {
+          heading: 'Interactive Freshwater Map',
+          description:
+            'Toggle the data layers to view Sri Lanka’s rivers, reservoirs, lakes, wetlands, and waterfalls. Click markers for verified statistics.'
+        },
+        tabs: {
+          rivers: 'River Systems',
+          reservoirs: 'Reservoirs & Dams',
+          lakes: 'Natural Lakes & Lagoons',
+          waterfalls: 'Waterfalls',
+          wetlands: 'Wetlands & Marshes'
+        },
+        labels: {
+          provinces: 'Provinces',
+          area: 'Area',
+          designation: 'Designation',
+          ecosystems: 'Ecosystems',
+          length: 'Length',
+          basinArea: 'Basin area',
+          annualFlow: 'Annual flow',
+          storage: 'Storage',
+          surfaceArea: 'Surface area',
+          maxDepth: 'Max depth',
+          height: 'Height',
+          commissioned: 'Commissioned',
+          purpose: 'Purpose',
+          infrastructure: 'Linked projects'
+        },
+        conservationSection: {
+          heading: 'Freshwater Stewardship Actions',
+          helpTitle: 'Water-smart habits for students',
+          tips: [
+            'Carry a reusable water bottle and track how much you save each week.',
+            'Record rainfall at school and compare it with river levels reported in the news.',
+            'Organise a field audit to map drains, canals, and wetland buffers around your community.',
+            'Report illegal dumping, sand mining, or invasive plants to local authorities.',
+            'Plant native trees or vetiver grass along eroding stream banks.',
+            'Share your findings with other classes through posters or short videos.'
+          ],
+          learnTitle: 'Learn and investigate',
+          accordions: [
+            {
+              id: 'waterCycle',
+              title: 'Island water cycle & monsoon rains',
+              description:
+                'Track how inter-monsoon showers, catchment forests, and reservoirs secure water for the dry zone.',
+              buttonText: 'View hydrology lesson'
+            },
+            {
+              id: 'endemicSpecies',
+              title: 'Endemic freshwater biodiversity',
+              description:
+                'Profile fish, amphibians, and aquatic plants that occur only in Sri Lankan rivers and tanks.',
+              buttonText: 'Open species guide'
+            },
+            {
+              id: 'freshwaterThreats',
+              title: 'Managing pollution and floods',
+              description:
+                'Investigate how wastewater, riverbank erosion, and urban runoff are monitored and controlled.',
+              buttonText: 'Explore case studies'
+            }
+          ]
+        }
+      },
+      
+      // Virtual Dive
+      virtualDive: {
+        title: 'Virtual Dive Adventure',
+        subtitle: "Swim through Sri Lanka's underwater worlds without getting wet!",
+        choosePrompt: 'Choose Your Dive Site',
+        startButton: 'Start Virtual Dive',
+        cards: [
+          {
+            id: 'hikkaduwa',
+            title: 'Hikkaduwa Coral Gardens',
+            depth: '5-15 m',
+            difficulty: 'beginner',
+            description: 'Colorful coral gardens bursting with clownfish and turtles.'
+          },
+          {
+            id: 'pigeon',
+            title: 'Pigeon Island Sanctuary',
+            depth: '3-12 m',
+            difficulty: 'beginner',
+            description: 'Protected marine park with bright shallow reefs and baby sharks.'
+          },
+          {
+            id: 'barReef',
+            title: 'Bar Reef Marine Park',
+            depth: '10-25 m',
+            difficulty: 'intermediate',
+            description: "Sri Lanka's largest coral reef with rays, reef sharks, and swaying corals."
+          },
+          {
+            id: 'greatBasses',
+            title: 'Great Basses Wreck',
+            depth: '30-40 m',
+            difficulty: 'advanced',
+            description: 'A legendary shipwreck hiding glittering fish schools and treasure tales.'
+          }
+        ],
+        difficultyLabels: {
+          beginner: 'Beginner',
+          intermediate: 'Intermediate',
+          advanced: 'Advanced'
+        },
+        viewer: {
+          back: '← Back to Dive Sites',
+          heading: '360° Virtual Dive View',
+          hint: '🎮 Use your mouse or finger to look around | {{site}}'
+        },
+        actions: {
+          speciesGuide: 'Species Guide',
+          map: 'Interactive Map',
+          vrMode: 'VR Mode'
         }
       },
       
       // Games & Activities
       games: {
         title: 'Games Hub',
-        oceanExplorer: 'Ocean Explorer',
-        speciesIdentifier: 'Species Identifier',
-        coralReefBuilder: 'Coral Reef Builder',
-        fishingSimulator: 'Sustainable Fishing',
-        waterCycleJourney: 'Water Cycle Journey',
-        ancientEngineer: 'Ancient Engineer',
-        playNow: 'Play Now',
-        highScore: 'High Score',
-        yourScore: 'Your Score',
-        newGame: 'New Game',
-        instructions: 'Instructions'
+        subtitle: 'Play, learn, and collect points with splashy adventures!',
+        cards: [
+          {
+            id: 'memoryMatch',
+            title: 'Species Memory Match',
+            description: 'Match marine animals with their names and superpowers.',
+            difficulty: 'easy',
+            points: 50
+          },
+          {
+            id: 'oceanExplorer',
+            title: 'Ocean Explorer',
+            description: 'Sail through ocean zones and discover amazing sea creatures.',
+            difficulty: 'medium',
+            points: 100
+          },
+          {
+            id: 'biologistChallenge',
+            title: 'Marine Biologist Challenge',
+            description: 'Investigate habitats, conservation, and ocean science mysteries.',
+            difficulty: 'hard',
+            points: 150
+          },
+          {
+            id: 'waveRider',
+            title: 'Wave Rider',
+            description: 'Surf the tides while learning about currents and weather.',
+            difficulty: 'medium',
+            points: 100
+          },
+          {
+            id: 'coralBuilder',
+            title: 'Coral Reef Builder',
+            description: 'Grow a healthy reef by keeping water clean and fish happy.',
+            difficulty: 'medium',
+            points: 100
+          },
+          {
+            id: 'conservationHero',
+            title: 'Conservation Hero',
+            description: 'Make smart choices to protect marine life and habitats.',
+            difficulty: 'hard',
+            points: 150
+          }
+        ],
+        difficultyLabels: {
+          easy: 'Easy',
+          medium: 'Medium',
+          hard: 'Challenging'
+        },
+        pointsLabel: '+{{points}} points',
+        playButton: 'Play Now',
+        comingSoon: {
+          title: 'More Games Coming Soon!',
+          description: "We're constantly building new educational games. Check back for fresh adventures!"
+        }
+      },
+      quiz: {
+        title: 'Quiz Center',
+        subtitle: 'Test your knowledge, earn badges, and climb the leaderboard!',
+        stats: {
+          quizzesTaken: 'Quizzes Completed',
+          averageScore: 'Average Score',
+          perfectScores: 'Perfect Scores',
+          totalPoints: 'Total Points'
+        },
+        listTitle: 'Available Quizzes',
+        categories: {
+          marine: 'Marine Life',
+          heritage: 'Water Heritage',
+          freshwater: 'Freshwater',
+          conservation: 'Conservation',
+          science: 'Science'
+        },
+        difficultyLabels: {
+          easy: 'Easy',
+          medium: 'Medium',
+          hard: 'Challenging'
+        },
+        meta: {
+          questions: '{{count}} questions',
+          duration: '{{minutes}} min'
+        },
+        chips: {
+          completed: 'Completed',
+          score: '{{score}}%'
+        },
+        buttons: {
+          start: 'Start Quiz',
+          retake: 'Retake Quiz'
+        },
+        cards: {
+          marineMammals: {
+            title: 'Marine Mammals of Sri Lanka',
+            description: 'Test your knowledge about whales, dolphins, and sneaky marine mammals.',
+            category: 'marine',
+            difficulty: 'medium'
+          },
+          coralReefs: {
+            title: 'Coral Reef Ecosystems',
+            description: 'Explore the busy life inside coral reefs.',
+            category: 'marine',
+            difficulty: 'easy'
+          },
+          waterHeritage: {
+            title: 'Sri Lankan Water Heritage',
+            description: 'Discover ancient tanks and amazing water engineers.',
+            category: 'heritage',
+            difficulty: 'hard'
+          },
+          freshwaterFish: {
+            title: 'Freshwater Fish Friends',
+            description: 'Identify colorful fish living in rivers and lakes.',
+            category: 'freshwater',
+            difficulty: 'medium'
+          },
+          oceanConservation: {
+            title: 'Ocean Conservation',
+            description: 'Learn about threats and how to be a sea guardian.',
+            category: 'conservation',
+            difficulty: 'easy'
+          },
+          naraResearch: {
+            title: 'NARA Research Projects',
+            description: 'Peek into the latest science happening at NARA labs.',
+            category: 'science',
+            difficulty: 'hard'
+          }
+        }
       },
       
       // Citizen Science
@@ -1169,40 +1486,11 @@ const resources = {
         adminDashboard: 'පරිපාලන පුවරුව',
         contentManager: 'අන්තර්ගත කළමනාකරු',
         userManagement: 'පරිශීලක කළමනාකරණය',
-        analytics: 'විශ්ලේෂණය'
-      },
-      
-      // Common
-      common: {
-        welcome: 'සාදරයෙන් පිළිගනිමු',
-        loading: 'පූරණය වෙමින්...',
-        save: 'සුරකින්න',
-        cancel: 'අවලංගු කරන්න',
-        delete: 'මකන්න',
-        edit: 'සංස්කරණය',
-        submit: 'යොමු කරන්න',
-        search: 'සොයන්න',
-        filter: 'පෙරහන',
-        sort: 'වර්ග කරන්න',
-        viewAll: 'සියල්ල බලන්න',
-        viewMore: 'තවත් බලන්න',
-        back: 'ආපසු',
-        next: 'ඊළඟ',
-        previous: 'පෙර',
-        close: 'වසන්න',
-        share: 'බෙදාගන්න',
-        download: 'බාගන්න',
-        upload: 'උඩුගත කරන්න',
-        points: 'ලකුණු',
-        level: 'මට්ටම',
-        badges: 'ලාංඡන',
-        achievements: 'ජයග්‍රහණ',
-        language: 'භාෂාව',
-        changeLanguage: 'භාෂාව වෙනස් කරන්න',
-        toggleTheme: 'තීම් වෙනස් කරන්න',
-        notifications: 'දැනුම්දීම්',
-        settings: 'සැකසුම්',
-        help: 'උදව්'
+        analytics: 'විශ්ලේෂණය',
+        schoolsManager: 'පාසල් කළමනාකරු',
+        aiContentGenerator: 'AI අන්තර්ගත උත්පාදක',
+        imageGenerator: 'රුප ජනකය',
+        schoolDirectory: 'පාසල් නාමාවලිය'
       },
 
       languages: {
@@ -1359,9 +1647,66 @@ const resources = {
         }
       },
       
+      // School Directory
+      schoolDirectory: {
+        title: 'පාසල් නාමාවලිය',
+        subtitle: 'ශ්‍රී ලංකාව පුරා නාරා ජලපාසල් හවුල් පාසල් සොයා ගන්න',
+        searchPlaceholder: 'පාසල් සොයන්න...',
+        filters: {
+          province: 'පළාත',
+          district: 'දිස්ත්‍රික්කය',
+          allProvinces: 'සියලු පළාත්',
+          allDistricts: 'සියලු දිස්ත්‍රික්'
+        },
+        sort: {
+          label: 'පිළිවෙළට කරන්න',
+          name: 'නම',
+          students: 'සිසුන්',
+          year: 'වර්ෂය'
+        },
+        stats: {
+          schools: 'හවුල් පාසල්',
+          students: 'ළඟා වූ සිසුන්',
+          districts: 'දිස්ත්‍රික්',
+          avgStudents: 'සාමාන්‍ය සිසුන්'
+        },
+        views: {
+          grid: 'ග්‍රිඩ් දසුන',
+          list: 'ලැයිස්තු දසුන',
+          map: 'සිතියම් දසුන'
+        },
+        table: {
+          name: 'පාසලේ නම',
+          type: 'වර්ගය',
+          district: 'දිස්ත්‍රික්කය',
+          grades: 'ශ්‍රේණි',
+          medium: 'මාධ්‍යය',
+          students: 'සිසුන්'
+        },
+        card: {
+          grades: 'ශ්‍රේණි',
+          students: 'සිසුන්'
+        },
+        mapView: {
+          title: 'අන්තර්ක්‍රියාකාරී පාසල් සිතියම',
+          description: 'අන්තර්ක්‍රියාකාරී සිතියමක ශ්‍රී ලංකාව පුරා පාසල් බලන්න',
+          comingSoon: 'ගූගල් සිතියම් ඒකාබද්ධතාවය ඉදිරියේදී පැමිණේ'
+        },
+        download: 'එක්සෙල් බාගන්න',
+        downloadSuccess: 'පාසල් නාමාවලිය සාර්ථකව බාගත විය!',
+        clearFilters: 'පැහැදිලි කරන්න',
+        resultsCount: 'පාසල් {{total}} න් {{count}} පෙන්වමින්',
+        noResults: 'ඔබේ නිර්ණායක වලට ගැලපෙන පාසල් හමු නොවීය',
+        errors: {
+          loadFailed: 'පාසල් පූරණය කිරීමට අසමත් විය',
+          downloadFailed: 'නාමාවලිය බාගත කිරීමට අසමත් විය'
+        }
+      },
+      
       // Marine Life
       marine: {
         title: 'සමුද්‍ර ජීවීන්',
+        subtitle: 'ශ්‍රී ලංකාවේ සමුද්‍ර ජෛව විවිධත්වය ගවේෂණය කරන්න',
         species: 'විශේෂ',
         habitat: 'වාසස්ථාන',
         conservation: 'සංරක්ෂණ තත්ත්වය',
@@ -1374,6 +1719,7 @@ const resources = {
         exploreSpecies: 'විශේෂ ගවේෂණය',
         searchSpecies: 'විශේෂ සොයන්න...',
         categories: {
+          all: 'සියලු විශේෂ',
           fish: 'මාළු',
           mammals: 'සමුද්‍ර ක්ෂීරපායීන්',
           reptiles: 'උරගයින්',
@@ -1381,6 +1727,274 @@ const resources = {
           coral: 'කොරල්',
           plants: 'සමුද්‍ර ශාක',
           birds: 'මුහුදු කුරුල්ලන්'
+        },
+        stats: {
+          totalSpecies: 'ලේඛගත සමුද්‍ර විශේෂ',
+          coralSpecies: 'ලේඛගත පරගු විශේෂ',
+          marineMammals: 'ශ්‍රී ලංකාවේ සමුද්‍ර ක්ෂීරපායී විශේෂ'
+        },
+        gradeExplorer: {
+          title: 'ශ්‍රේණි මට්ටම් ගවේෂණය',
+          description: 'ඔබේ ශ්‍රේණිය තෝරා ශ්‍රී ලංකා සිසුන් සඳහා සකස් කළ පාඩම්, ක්‍රියාකාරිකත් හා විශේෂ දැනුම අග්‍රහණය කරන්න.',
+          focusHeading: 'ප්‍රධාන කෙරුණු',
+          goalsHeading: 'ඉගෙනුම් ඉලක්ක',
+          activityHeading: 'අත්හදා බැලීම්',
+          speciesHeading: 'විශේෂ ප්‍රකාශ'
+        }
+      },
+      
+      // Freshwater
+      freshwater: {
+        title: 'ශ්‍රී ලංකා මිරිදිය අට්ලසය',
+        subtitle: 'ගංගා, ජලාශ, මඩලා සහ දියඇලි පිළිබඳ නිශ්චිත දත්ත අධ්‍යාපනික සොයාබැලීම් සඳහා.',
+        mapSection: {
+          heading: 'අන්තර්ක්‍රියාකාරී මිරිදිය සිතියම',
+          description:
+            'පෙරහන් ක්‍රියාත්මක කර ගංගා, ජලාශ, ස්වාභාවික වැව්, මඩලා සහ දියඇලි වෙන වෙනම බලන්න. ලකුණු මත ක්ලික් කර සත්‍යාපිත දත්ත කියවන්න.'
+        },
+        tabs: {
+          rivers: 'ගඟ පද්ධති',
+          reservoirs: 'ජලාශ හා ව්‍යාපෘති',
+          lakes: 'ස්වාභාවික වැව් සහ ලාගුන්',
+          waterfalls: 'දියඇලි',
+          wetlands: 'මඩලා සහ දියබඩ'
+        },
+        labels: {
+          provinces: 'පළාත්',
+          area: 'විස්තීර්ණය',
+          designation: 'ස්ථානයේ තත්ත්වය',
+          ecosystems: 'වාසස්ථාන',
+          length: 'දිග',
+          basinArea: 'ප්‍රදේශ විස්තීර්ණය',
+          annualFlow: 'වාර්ෂික ජල ගැලීම',
+          storage: 'ගබඩා හැකියාව',
+          surfaceArea: 'පෘෂ්ඨ විස්තීර්ණය',
+          maxDepth: 'උපරිම ගැඹුර',
+          height: 'උස',
+          commissioned: 'ආරම්භ කළ වර්ෂය',
+          purpose: 'පරමාර්ථය',
+          infrastructure: 'සබැඳි ව්‍යාපෘති'
+        },
+        conservationSection: {
+          heading: 'මිරිදිය සංරක්ෂණ ක්‍රියාමාර්ග',
+          helpTitle: 'ශිෂ්‍යයින්ට කළ හැකි ජල-හිතවාදී ක්‍රියා',
+          tips: [
+            'නැවත භාවිත කළ හැකි ජල බෝතලයක් ගෙන එන්න සහ සතිපතා සුරකින්නේ කොපමණද සටහන් කරන්න.',
+            'පාසලේ වැසි ප්‍රමාණය මිනුම් කර පුවත්පත් වල සඳහන් ගඟ ජල මට්ටම් සමඟ සසඳන්න.',
+            'ප්‍රදේශයේ නාලා, නිරෝධන බන්ධනාගාර සහ මඩලා සිතියම් සංවිධානය කරන ක්ෂේත්‍ර පරීක්ෂණයක් කළයුතුයි.',
+            'නීතිවිරෝධී අපද්‍රව්‍ය ප්‍රතික්ෂේපය, වැලි කැපීම හෝ ආගන්තුක ශාක දැකියහොත් ප්‍රාදේශීය අධිකාරියට දැනුම් දෙන්න.',
+            'ගඟ තීර erosion වැළැක්වීමට ස්වදේශීය රුක්ෂ හෝ වේටිවර් තක්කල වගා කරන්න.',
+            'ඔබේ සොයාගැනීම් පෝස්ටර් හෝ වීඩියෝ ලෙස වෙනත් පංති සමඟ බෙදාගන්න.'
+          ],
+          learnTitle: 'ඉගෙන ගැනීම සහ පරීක්ෂා කිරීම',
+          accordions: [
+            {
+              id: 'waterCycle',
+              title: 'ද්වීප ජල චක්‍රය සහ මෝසම් වර්ෂා',
+              description:
+                'අන්තර් මෝසම් වැසි, වගා වනාන්තර සහ ජලාශ වියලි කලාපයට ජලය භාරදෙන ආකාරය අධ්‍යායනය කරන්න.',
+              buttonText: 'ජලාභිධාන පාඩම බලන්න'
+            },
+            {
+              id: 'endemicSpecies',
+              title: 'දේශීය මිරිදිය ජීව විවිධත්වය',
+              description:
+                'ශ්‍රී ලංකාවේ ගංගා සහ වැව් වල පමණක් පවත්නා මාළු, උරග හා ජල ශාක පිළිබඳ වාර්තා සකස් කරන්න.',
+              buttonText: 'විශේෂ මාර්ගෝපදේශය විවෘත කරන්න'
+            },
+            {
+              id: 'freshwaterThreats',
+              title: 'දුෂණය හා ගංවතුර කළමනාකරණය',
+              description:
+                'මළජලය, ගඟ තීර කාන්දුවීම් සහ නගර ජල පාරිභෝගික දූෂණය පාලනය කෙරෙන ආකාරය පරීක්ෂා කරන්න.',
+              buttonText: 'කේස් අධ්‍යයන මාලාව බලන්න'
+            }
+          ]
+        }
+      },
+      
+      // Virtual Dive
+      virtualDive: {
+        title: 'අතථ්‍ය කිමිදුම් ගමන',
+        subtitle: 'ජලයේ යටට නොගොස්ම ශ්‍රී ලංකාවේ යටින් ලෝකය සොයා බලමු!',
+        choosePrompt: 'ඔබේ කිමිදුම් ස්ථානය තෝරන්න',
+        startButton: 'අතථ්‍ය කිමිදුම අරඹන්න',
+        cards: [
+          {
+            id: 'hikkaduwa',
+            title: 'හිකඩුව කොරල් උයන',
+            depth: '5-15 m',
+            difficulty: 'beginner',
+            description: 'වර්ණවත් කොරල් සහ කඩුවැල් මාළු, කැස්බෑව් සමඟ සෙල්ලමක්.'
+          },
+          {
+            id: 'pigeon',
+            title: 'පිජන් දූපත් සංරක්ෂිතය',
+            depth: '3-12 m',
+            difficulty: 'beginner',
+            description: 'සුරක්ෂිත කොරල් පන්ශාලාව. පැහැපත් දිය කඩයිත් කුඩා සුරුමීන්ත්.'
+          },
+          {
+            id: 'barReef',
+            title: 'බාර් රීෆ් සමුද්‍ර උද්‍යානය',
+            depth: '10-25 m',
+            difficulty: 'intermediate',
+            description: 'ශ්‍රී ලංකාවේ විශාලම කොරල් පන්ශාලාව. රේ, රීෆ් සරු මීහුස්සා සහ නටන කොරල්.'
+          },
+          {
+            id: 'greatBasses',
+            title: 'ග්රේට් බැසස් කපල් ජලාශ්‍රය',
+            depth: '30-40 m',
+            difficulty: 'advanced',
+            description: 'හිත් අරන් යටවූ පරණ නෞකාවක්. දිලිසෙන මාළු කණ්ඩායම් හා පොකුරු කතා.'
+          }
+        ],
+        difficultyLabels: {
+          beginner: 'ආරම්භක',
+          intermediate: 'මධ්‍යම',
+          advanced: 'අභියෝගී'
+        },
+        viewer: {
+          back: '← කිමිදුම් ස්ථාන වෙත ආපසු',
+          heading: '360° අතථ්‍ය කිමිදුම් දසුන',
+          hint: '🎮 මවුසය හෝ අත භාවිතයෙන් අවට බලන්න | {{site}}'
+        },
+        actions: {
+          speciesGuide: 'විශේෂ මාර්ගෝපදේශය',
+          map: 'අන්තර්ක්‍රියාකාරී සිතියම',
+          vrMode: 'VR ප්‍රකාරය'
+        }
+      },
+      games: {
+        title: 'ක්‍රීඩා මධ්‍යස්ථානය',
+        subtitle: 'සෙල්ලම් කරමින් ඉගෙන ගන්න සහ ලකුණු රැස්කරන්න!',
+        cards: [
+          {
+            id: 'memoryMatch',
+            title: 'විශේෂ මතක ගැලපීම',
+            description: 'සමුද්‍ර සතුන්ගේ නාම සහ ඔවුන්ගේ සුපිරි හැකියාවන් ගැලපුවා.',
+            difficulty: 'easy',
+            points: 50
+          },
+          {
+            id: 'oceanExplorer',
+            title: 'මුහුදු ගවේෂකයා',
+            description: 'මුහුදු මට්ටම් හරහා ගමන් කර විශිෂ්ට ජීවින් හමුවන්න.',
+            difficulty: 'medium',
+            points: 100
+          },
+          {
+            id: 'biologistChallenge',
+            title: 'සමුද්‍ර ජීව විද්‍යාඥ අභියෝගය',
+            description: 'වාසස්ථාන, සංරක්ෂණය, විද්‍යා මර්ම සොයා බලන්න.',
+            difficulty: 'hard',
+            points: 150
+          },
+          {
+            id: 'waveRider',
+            title: 'තරංග සෙල්ලම්කාරයා',
+            description: 'තරංග හරහා යමින් ජල ධාරා සහ කාලගුණය ගැන ඉගෙන ගන්න.',
+            difficulty: 'medium',
+            points: 100
+          },
+          {
+            id: 'coralBuilder',
+            title: 'කොරල් පන්ශාලා ගොඩනගන්නා',
+            description: 'පිරිසිදු ජලය සහ සතුන්ට සැනසුම ලබාදී රිෆ් එක සනාථ කරන්න.',
+            difficulty: 'medium',
+            points: 100
+          },
+          {
+            id: 'conservationHero',
+            title: 'සංරක්ෂණ වීරයා',
+            description: 'සමුද්‍ර ජීවිතය ආරක්ෂා කරන හොඳ තීරණ ගන්න.',
+            difficulty: 'hard',
+            points: 150
+          }
+        ],
+        difficultyLabels: {
+          easy: 'සරල',
+          medium: 'මධ්‍යම',
+          hard: 'අභියෝගී'
+        },
+        pointsLabel: '+{{points}} ලකුණු',
+        playButton: 'දැන් සෙල්ලම් කරන්න',
+        comingSoon: {
+          title: 'තවත් ක්‍රීඩා ඉක්මනින්!',
+          description: 'අපි නව අධ්‍යාපනික ක්‍රීඩා නිතරම නිර්මාණය කරමින් ඉන්නවා. නිතරම පිවිසෙන්න!'
+        }
+      },
+      quiz: {
+        title: 'ප්‍රශ්නාවලි මධ්‍යස්ථානය',
+        subtitle: 'ඔබේ දැනුම පරීක්ෂා කර ලාංඡන එකතු කර ප්‍රමුඛ පුවරුවල ඉහළට ගියෙමු!',
+        stats: {
+          quizzesTaken: 'සම්පූර්ණ කළ ප්‍රශ්නාවලි',
+          averageScore: 'සාමාන්‍ය ලකුණු',
+          perfectScores: 'පූර්ණ ලකුණු',
+          totalPoints: 'මුලු ලකුණු'
+        },
+        listTitle: 'ලබාගත හැකි ප්‍රශ්නාවලි',
+        categories: {
+          marine: 'සමුද්‍ර ජීවීන්',
+          heritage: 'ජල උරුමය',
+          freshwater: 'මිරිදිය',
+          conservation: 'සංරක්ෂණය',
+          science: 'විද්‍යාව'
+        },
+        difficultyLabels: {
+          easy: 'සරල',
+          medium: 'මධ්‍යම',
+          hard: 'අභියෝගී'
+        },
+        meta: {
+          questions: '{{count}} ප්‍රශ්න',
+          duration: '{{minutes}} විනාඩි'
+        },
+        chips: {
+          completed: 'සම්පූර්ණයි',
+          score: '{{score}}%'
+        },
+        buttons: {
+          start: 'ප්‍රශ්නාවලිය ආරම්භ කරන්න',
+          retake: 'නැවත උත්සාහ කරන්න'
+        },
+        cards: {
+          marineMammals: {
+            title: 'ශ්‍රී ලංකාවේ සමුද්‍ර ක්ෂීරපායින්',
+            description: 'තරණුවන්, දවුන්, සමුද්‍ර මීහුස්සා ගැන දැනුම පරීක්ෂා කරන්න.',
+            category: 'marine',
+            difficulty: 'medium'
+          },
+          coralReefs: {
+            title: 'කොරල් පන්ශාලා පවිත්‍රය',
+            description: 'කොරල් පන්ශාලාවේ සඟවා ඇති තරඟකාරි ජීවිතය සොයා බලන්න.',
+            category: 'marine',
+            difficulty: 'easy'
+          },
+          waterHeritage: {
+            title: 'ශ්‍රී ලංකාවේ ජල උරුමය',
+            description: 'පැරණි වැව් සහ විකාශිත ජල ඉංජිනේරුවන් ගැන ඉගෙන ගන්න.',
+            category: 'heritage',
+            difficulty: 'hard'
+          },
+          freshwaterFish: {
+            title: 'මිරිදිය මාළු මිතුරන්',
+            description: 'ගංගා සහ වැව් වල වර්ණවත් මිතුරන් හඳුනාගන්න.',
+            category: 'freshwater',
+            difficulty: 'medium'
+          },
+          oceanConservation: {
+            title: 'මුහුදු සංරක්ෂණය',
+            description: 'මුහුදු අභියෝග සහ ඔබට හොඳ රැකබලා ගැනීමේ ක්‍රියාමාර්ග ගැන ඉගෙන ගන්න.',
+            category: 'conservation',
+            difficulty: 'easy'
+          },
+          naraResearch: {
+            title: 'නාරා පර්යේෂණ ව්‍යාපෘති',
+            description: 'නාරා ගවේශන ශාලාවල සිදුවන නව විද්‍යාත්මක වැඩපිළිවෙළවලට බැලෙමු.',
+            category: 'science',
+            difficulty: 'hard'
+          }
         }
       },
 
@@ -1454,7 +2068,11 @@ const resources = {
         adminDashboard: 'நிர்வாக கட்டுப்பாடு',
         contentManager: 'உள்ளடக்க மேலாளர்',
         userManagement: 'பயனர் மேலாண்மை',
-        analytics: 'பகுப்பாய்வு'
+        analytics: 'பகுப்பாய்வு',
+        schoolsManager: 'பள்ளி மேலாளர்',
+        aiContentGenerator: 'AI உள்ளடக்க உருவாக்கி',
+        imageGenerator: 'பட உருவாக்கி',
+        schoolDirectory: 'பள்ளி பட்டியல்'
       },
       
       // Common
@@ -1644,9 +2262,66 @@ const resources = {
         }
       },
       
+      // School Directory
+      schoolDirectory: {
+        title: 'பள்ளி பட்டியல்',
+        subtitle: 'இலங்கை முழுவதும் நாரா நீர்ப்பள்ளி கூட்டாளர் பள்ளிகளை கண்டறியுங்கள்',
+        searchPlaceholder: 'பள்ளிகளை தேடுங்கள்...',
+        filters: {
+          province: 'மாகாணம்',
+          district: 'மாவட்டம்',
+          allProvinces: 'அனைத்து மாகாணங்கள்',
+          allDistricts: 'அனைத்து மாவட்டங்கள்'
+        },
+        sort: {
+          label: 'வரிசைப்படுத்து',
+          name: 'பெயர்',
+          students: 'மாணவர்கள்',
+          year: 'ஆண்டு'
+        },
+        stats: {
+          schools: 'கூட்டாளர் பள்ளிகள்',
+          students: 'சென்றடைந்த மாணவர்கள்',
+          districts: 'மாவட்டங்கள்',
+          avgStudents: 'சராசரி மாணவர்கள்'
+        },
+        views: {
+          grid: 'கட்ட காட்சி',
+          list: 'பட்டியல் காட்சி',
+          map: 'வரைபட காட்சி'
+        },
+        table: {
+          name: 'பள்ளி பெயர்',
+          type: 'வகை',
+          district: 'மாவட்டம்',
+          grades: 'வகுப்புகள்',
+          medium: 'மொழி',
+          students: 'மாணவர்கள்'
+        },
+        card: {
+          grades: 'வகுப்புகள்',
+          students: 'மாணவர்கள்'
+        },
+        mapView: {
+          title: 'ஊடாடும் பள்ளி வரைபடம்',
+          description: 'ஊடாடும் வரைபடத்தில் இலங்கை முழுவதும் பள்ளிகளை பார்க்கவும்',
+          comingSoon: 'கூகுள் வரைபட ஒருங்கிணைப்பு விரைவில்'
+        },
+        download: 'எக்செல் பதிவிறக்கம்',
+        downloadSuccess: 'பள்ளி பட்டியல் வெற்றிகரமாக பதிவிறக்கம் செய்யப்பட்டது!',
+        clearFilters: 'அழி',
+        resultsCount: '{{total}} பள்ளிகளில் {{count}} காண்பிக்கப்படுகின்றன',
+        noResults: 'உங்கள் அளவுகோல்களுடன் பொருந்தும் பள்ளிகள் இல்லை',
+        errors: {
+          loadFailed: 'பள்ளிகளை ஏற்ற முடியவில்லை',
+          downloadFailed: 'பட்டியலை பதிவிறக்க முடியவில்லை'
+        }
+      },
+      
       // Marine Life
       marine: {
         title: 'கடல் வாழ்க்கை',
+        subtitle: 'இலங்கையின் கடல் உயிரியல் பல்வகைமையை ஆராயுங்கள்',
         species: 'இனங்கள்',
         habitat: 'வாழ்விடம்',
         conservation: 'பாதுகாப்பு நிலை',
@@ -1659,6 +2334,7 @@ const resources = {
         exploreSpecies: 'இனங்களை ஆராயுங்கள்',
         searchSpecies: 'இனங்களைத் தேடு...',
         categories: {
+          all: 'அனைத்து இனங்கள்',
           fish: 'மீன்',
           mammals: 'கடல் பாலூட்டிகள்',
           reptiles: 'ஊர்வன',
@@ -1666,6 +2342,274 @@ const resources = {
           coral: 'பவளம்',
           plants: 'கடல் தாவரங்கள்',
           birds: 'கடல் பறவைகள்'
+        },
+        stats: {
+          totalSpecies: 'அறிக்கையிடப்பட்ட கடல்சார் இனங்கள்',
+          coralSpecies: 'பதிவுசெய்யப்பட்ட பவள இனங்கள்',
+          marineMammals: 'இலங்கையில் உள்ள கடல் பாலூட்டினங்கள்'
+        },
+        gradeExplorer: {
+          title: 'தர அடிப்படையிலான கற்றல் வழிகாட்டி',
+          description: 'உங்கள் வகுப்பு நிலையைத் தேர்வுசெய்து பாடங்கள், செயல்பாடுகள் மற்றும் இலங்கை கடல் உயிரினங்களைப் பற்றிய சிறப்பு தொகுப்புகளை திறக்கவும்.',
+          focusHeading: 'கவனம் செலுத்தும் தலைப்புகள்',
+          goalsHeading: 'கற்றல் இலக்குகள்',
+          activityHeading: 'கைகூலி யோசனைகள்',
+          speciesHeading: 'விளக்க உயிரினங்கள்'
+        }
+      },
+      
+      // Freshwater
+      freshwater: {
+        title: 'இலங்கை இன்நீர் அட்லஸ்',
+        subtitle: 'ஆறுகள், அணைகள், ஈர நிலங்கள் மற்றும் நீர்வீழ்ச்சிகள் குறித்த துல்லியமான தரவு கல்வி பயன்பாட்டிற்கு.',
+        mapSection: {
+          heading: 'இணைக்கிற இன்நீர் வரைபடம்',
+          description:
+            'வடிகளை இயக்கி இலங்கையின் ஆறுகள், அணைகள், இயற்கை ஏரிகள், ஈர நிலங்கள் மற்றும் நீர்வீழ்ச்சிகளைப் பார்க்கவும். குறியீடுகளை சொடுக்கி சரிபார்க்கப்பட்ட புள்ளிவிவரங்களைப் படிக்கவும்.'
+        },
+        tabs: {
+          rivers: 'ஆறு அமைப்புகள்',
+          reservoirs: 'அணைகள் & நீர்த்தேக்கங்கள்',
+          lakes: 'இயற்கை ஏரிகள் & குளங்கள்',
+          waterfalls: 'நீர்வீழ்ச்சிகள்',
+          wetlands: 'ஈர நிலங்கள் & பள்ளத்தாக்குகள்'
+        },
+        labels: {
+          provinces: 'மாகாணங்கள்',
+          area: 'பரப்பளவு',
+          designation: 'அங்கீகாரம்',
+          ecosystems: 'சூழல்கள்',
+          length: 'நீளம்',
+          basinArea: 'நீர்ப்பாசன பரப்பளவு',
+          annualFlow: 'வருடாந்திர நீரோட்டம்',
+          storage: 'சேமிப்பு கொள்ளளவு',
+          surfaceArea: 'மேற்பரப்பு பரப்பளவு',
+          maxDepth: 'அதிகபட்ச ஆழம்',
+          height: 'உயரம்',
+          commissioned: 'பணியில் தொடங்கிய ஆண்டு',
+          purpose: 'நோக்கம்',
+          infrastructure: 'இணைந்த திட்டங்கள்'
+        },
+        conservationSection: {
+          heading: 'இன்நீர் பாதுகாப்பு நடவடிக்கைகள்',
+          helpTitle: 'மாணவர்கள் செய்யக்கூடிய நீர் நட்பு செயல்கள்',
+          tips: [
+            'மீண்டும் பயன்படுத்தக்கூடிய நீர் பாட்டிலைப் பயன்படுத்தி வாராந்திர நீர் சேமிப்பை பதிவுசெய்யுங்கள்.',
+            'பள்ளியில் மழைப்பொழிவை அளந்து, செய்திகளில் வெளியாகும் ஆறு நிலைகளுடன் ஒப்பிடுங்கள்.',
+            'உங்கள் பகுதியின் கால்வாய்கள், வடிகால் மற்றும் ஈர நில எல்லைகளை வரைபடப்படுத்தும் தள ஆய்வை ஏற்பாடு செய்யுங்கள்.',
+            'சட்டவிரோத குப்பை கொட்டுதல், மணல் எடுப்பு அல்லது வெளிநாட்டு தாவரங்கள் கண்டால் உள்ளூராட்சி அதிகாரிகளுக்கு தெரிவிக்கவும்.',
+            'ஆற்றங்கரை இடரொதுக்கலைத் தடுக்க உள்ளூர் மரங்கள் அல்லது வெட்டிவர் புல் நடுங்கள்.',
+            'உங்கள் ஆய்வுகளைப் போஸ்டர் அல்லது குறும்படங்களாக பிற வகுப்புகளுடன் பகிர்ந்து கொள்ளுங்கள்.'
+          ],
+          learnTitle: 'கற்றலும் ஆராய்வும்',
+          accordions: [
+            {
+              id: 'waterCycle',
+              title: 'தீவு நீர்சுழற்சி மற்றும் பருவமழை',
+              description:
+                'இடைமழைகள், பிடார் காடுகள் மற்றும் நீர்த்தேக்கங்கள் வறண்ட மண்டலங்களுக்கு தண்ணீர் வழங்கும் விதத்தைப் படித்தறிக.',
+              buttonText: 'நீரியல் பாடத்தைப் பார்க்கவும்'
+            },
+            {
+              id: 'endemicSpecies',
+              title: 'இலங்கை சார்ந்த இன்நீர் உயிர் பல்வகைமை',
+              description:
+                'இலங்கையின் ஆறுகள் மற்றும் குளங்களில் மட்டும் காணப்படும் மீன்கள், இருவாழ்வினங்கள் மற்றும் நீர்த் தாவரங்களைப் பதிவுசெய்யுங்கள்.',
+              buttonText: 'இன வழிகாட்டியைத் திறக்கவும்'
+            },
+            {
+              id: 'freshwaterThreats',
+              title: 'மாசுபாடு மற்றும் வெள்ள மேலாண்மை',
+              description:
+                'கழிவுநீர், கரையரிப்பு மற்றும் நகர மழை நீர் வெளியேற்றம் எவ்வாறு கண்காணித்து கட்டுப்படுத்தப்படுகிறது என்பதை ஆராயுங்கள்.',
+              buttonText: 'வழக்குக்கூறு தொகுப்பைப் பாருங்கள்'
+            }
+          ]
+        }
+      },
+      
+      // Virtual Dive
+      virtualDive: {
+        title: 'மெய்நிகர் மூழ்கல் சாகசம்',
+        subtitle: 'நீரில் நனைவதில்லாமல் இலங்கையின் நீரடி உலகில் நீந்துவோம்!',
+        choosePrompt: 'உங்கள் மூழ்கல் இடத்தைத் தேர்ந்தெடுக்கவும்',
+        startButton: 'மெய்நிகர் மூழ்கலை தொடங்கவும்',
+        cards: [
+          {
+            id: 'hikkaduwa',
+            title: 'ஹிக்கடுவா பவளத் தோட்டம்',
+            depth: '5-15 m',
+            difficulty: 'beginner',
+            description: 'வண்ணமயமான பவள தோட்டங்களில் குளவி மீன்கள் மற்றும் கடல் ஆமைகள் நடனமாடுகின்றன.'
+          },
+          {
+            id: 'pigeon',
+            title: 'பிஜன் தீவு காப்பகம்',
+            depth: '3-12 m',
+            difficulty: 'beginner',
+            description: 'பாதுகாக்கப்பட்ட கடல் பூங்கா; பிரகாசமான தாழ்ந்த பவளங்கள் மற்றும் குட்டி சுறாக்கள்.'
+          },
+          {
+            id: 'barReef',
+            title: 'பார் ரீஃப் கடல் பூங்கா',
+            depth: '10-25 m',
+            difficulty: 'intermediate',
+            description: 'இலங்கையின் மிகப்பெரிய பவளப் பாறை. கதிரைகள், பாறைச் சுறாக்கள், ஊஞ்சலாடும் பவளங்கள்.'
+          },
+          {
+            id: 'greatBasses',
+            title: 'கிரேட் பாஸஸ் கப்பல் சிதிலம்',
+            depth: '30-40 m',
+            difficulty: 'advanced',
+            description: 'புகழ்பெற்ற பழமையான கப்பல் சிதிலம்; மின்னும் மீன் கூட்டங்கள் மற்றும் புதையல் கதைகள்.'
+          }
+        ],
+        difficultyLabels: {
+          beginner: 'தொடக்க நிலை',
+          intermediate: 'இடைநிலை',
+          advanced: 'மேம்பட்ட'
+        },
+        viewer: {
+          back: '← மூழ்கல் இடங்களுக்கு திரும்பவும்',
+          heading: '360° மெய்நிகர் மூழ்கல் காட்சி',
+          hint: '🎮 முயஸ் அல்லது விரலைப் பயன்படுத்தி சுற்றிப் பாருங்கள் | {{site}}'
+        },
+        actions: {
+          speciesGuide: 'இன வழிகாட்டி',
+          map: 'இணைய வரைபடம்',
+          vrMode: 'VR முறை'
+        }
+      },
+      games: {
+        title: 'விளையாட்டு மையம்',
+        subtitle: 'விளையாடி கற்று புள்ளிகளை சேகரிப்போம்!',
+        cards: [
+          {
+            id: 'memoryMatch',
+            title: 'இன நினைவுப் பொருத்தம்',
+            description: 'கடல் உயிர்களின் பெயர்களையும் சூப்பர் திறன்களையும் பொருத்துங்கள்.',
+            difficulty: 'easy',
+            points: 50
+          },
+          {
+            id: 'oceanExplorer',
+            title: 'கடல் ஆய்வாளர்',
+            description: 'கடல் பகுதிகள் வழியாகப் பயணம் செய்து அற்புதமான உயிர்களை கண்டுபிடியுங்கள்.',
+            difficulty: 'medium',
+            points: 100
+          },
+          {
+            id: 'biologistChallenge',
+            title: 'கடல்சார் உயிரியல் சவால்',
+            description: 'வாழ்விடங்கள், பாதுகாப்பு மற்றும் அறிவியல் புதிர்களை ஆராயுங்கள்.',
+            difficulty: 'hard',
+            points: 150
+          },
+          {
+            id: 'waveRider',
+            title: 'அலை ஓட்ட வீரர்',
+            description: 'அலைகளோடு சவாரி செய்து நீரோட்டங்கள் மற்றும் வானிலை பற்றி கற்றுக் கொள்ளுங்கள்.',
+            difficulty: 'medium',
+            points: 100
+          },
+          {
+            id: 'coralBuilder',
+            title: 'பவளப் பாறை கட்டுபவர்',
+            description: 'நீரை தூய்மையாகவும் மீன்களை மகிழ்ச்சியாகவும் வைத்துக் கொண்டு பவளப் பாறையை வளர்த்துக் கொள்ளுங்கள்.',
+            difficulty: 'medium',
+            points: 100
+          },
+          {
+            id: 'conservationHero',
+            title: 'பாதுகாப்பு நாயகன்',
+            description: 'கடல் உயிர்களையும் வாழ்விடங்களையும் காப்பாற்ற புத்திசாலித்தனமான முடிவுகளை எடுக்கவும்.',
+            difficulty: 'hard',
+            points: 150
+          }
+        ],
+        difficultyLabels: {
+          easy: 'எளிது',
+          medium: 'இடைநிலை',
+          hard: 'சவாலானது'
+        },
+        pointsLabel: '+{{points}} புள்ளிகள்',
+        playButton: 'இப்போதே விளையாடு',
+        comingSoon: {
+          title: 'இன்னும் பல விளையாட்டுகள் விரைவில்!',
+          description: 'நாங்கள் புதிதாக கல்வி விளையாட்டுகளை உருவாக்கிக் கொண்டிருக்கிறோம். புதுப்பிப்புகளுக்கு அடிக்கடி வருக!'
+        }
+      },
+      quiz: {
+        title: 'வினாடி வினா மையம்',
+        subtitle: 'உங்கள் அறிவைச் சோதித்து பதக்கங்களைப் பெற்று முன்னணி பலகையில் உயருங்கள்!',
+        stats: {
+          quizzesTaken: 'முடித்த வினாடி வினாக்கள்',
+          averageScore: 'சராசரி மதிப்பெண்',
+          perfectScores: 'பரிபூரண மதிப்பெண்கள்',
+          totalPoints: 'மொத்த புள்ளிகள்'
+        },
+        listTitle: 'கிடைக்கும் வினாடி வினாக்கள்',
+        categories: {
+          marine: 'கடல் வாழ்க்கை',
+          heritage: 'நீர் பாரம்பரியம்',
+          freshwater: 'நன்னீர்',
+          conservation: 'பாதுகாப்பு',
+          science: 'அறிவியல்'
+        },
+        difficultyLabels: {
+          easy: 'எளிது',
+          medium: 'இடைநிலை',
+          hard: 'சவாலானது'
+        },
+        meta: {
+          questions: '{{count}} கேள்விகள்',
+          duration: '{{minutes}} நிமிடங்கள்'
+        },
+        chips: {
+          completed: 'முடிந்தது',
+          score: '{{score}}%'
+        },
+        buttons: {
+          start: 'வினாடி வினாவை தொடங்கவும்',
+          retake: 'மீண்டும் முயலவும்'
+        },
+        cards: {
+          marineMammals: {
+            title: 'இலங்கையின் கடல்சார் பாலூட்டுகள்',
+            description: 'திமிங்கிலங்கள், டால்பின்கள் மற்றும் பிற கடல் பாலூட்டுகள் பற்றி உங்கள் அறிவைச் சோதிக்கவும்.',
+            category: 'marine',
+            difficulty: 'medium'
+          },
+          coralReefs: {
+            title: 'பவளப் பாறை சூழல்கள்',
+            description: 'பவளப் பாறைகளின் சுறுசுறுப்பு வாழ்க்கையை ஆராயுங்கள்.',
+            category: 'marine',
+            difficulty: 'easy'
+          },
+          waterHeritage: {
+            title: 'இலங்கையின் நீர் பாரம்பரியம்',
+            description: 'பழமையான தொட்டி அமைப்புகள் மற்றும் அற்புதமான நீரியல் பொறியாளர்களை அறியுங்கள்.',
+            category: 'heritage',
+            difficulty: 'hard'
+          },
+          freshwaterFish: {
+            title: 'நன்னீர் மீன் நண்பர்கள்',
+            description: 'ஆறுகளிலும் ஏரிகளிலும் வாழும் வண்ணமயமான நண்பர்களை அடையாளம் காணுங்கள்.',
+            category: 'freshwater',
+            difficulty: 'medium'
+          },
+          oceanConservation: {
+            title: 'கடல் பாதுகாப்பு',
+            description: 'அச்சங்கள் என்ன, கடலை எப்படி காப்பது என்பதை கற்றுக்கொள்ளுங்கள்.',
+            category: 'conservation',
+            difficulty: 'easy'
+          },
+          naraResearch: {
+            title: 'நாரா ஆய்வு திட்டங்கள்',
+            description: 'நாரா ஆய்வகங்களில் நடக்கும் சமீபத்திய அறிவியல் செயல்களைப் பாருங்கள்.',
+            category: 'science',
+            difficulty: 'hard'
+          }
         }
       },
 
@@ -1700,37 +2644,31 @@ const resources = {
   }
 };
 
-// Initialize i18n
+// Initialize i18n with English as default, supporting Sinhala and Tamil
 i18n
-  .use(LanguageDetector)
   .use(initReactI18next)
   .init({
     resources,
-    lng: 'en', // Force English as default language
+    lng: 'en', // Default to English
     fallbackLng: 'en',
+    supportedLngs: ['en', 'si', 'ta'], // Support English, Sinhala, and Tamil
+    nonExplicitSupportedLngs: false,
+    load: 'languageOnly',
     debug: false,
-    
-    detection: {
-      // Order of detection - only use localStorage, ignore browser language
-      order: ['localStorage'],
-      // Cache user language selection
-      caches: ['localStorage'],
-      // Don't detect from browser/navigator
-      lookupLocalStorage: 'i18nextLng',
-      // Exclude other detection methods
-      excludeCacheFor: ['cimode']
-    },
-    
+
     interpolation: {
       escapeValue: false
     }
   });
 
-// Force English on initialization and clear any stored Tamil/Sinhala preference
-const storedLang = localStorage.getItem('i18nextLng');
-if (!storedLang || storedLang === 'ta' || storedLang === 'si') {
-  localStorage.setItem('i18nextLng', 'en');
-  i18n.changeLanguage('en');
+// Set English as default if no language is stored
+if (typeof window !== 'undefined') {
+  const storedLang = localStorage.getItem('i18nextLng');
+  // If no language is stored or invalid, default to English
+  if (!storedLang || !['en', 'si', 'ta'].includes(storedLang)) {
+    localStorage.setItem('i18nextLng', 'en');
+    i18n.changeLanguage('en');
+  }
 }
 
 export default i18n;

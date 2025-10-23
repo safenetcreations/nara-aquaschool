@@ -42,23 +42,40 @@ const firebaseConfig = {
 };
 
 // Initialize Firebase
-const app = initializeApp(firebaseConfig);
+let app = null;
+let auth = null;
+let db = null;
+let storage = null;
+let functions = null;
+let realtimeDb = null;
 
-// Initialize Firebase services
-export const auth = getAuth(app);
-export const db = getFirestore(app);
-export const storage = getStorage(app);
-export const functions = getFunctions(app);
-export const realtimeDb = getDatabase(app);
+try {
+  app = initializeApp(firebaseConfig);
+
+  // Initialize Firebase services
+  auth = getAuth(app);
+
+  // Use the 'aquaschool' database instead of default
+  db = getFirestore(app, 'aquaschool');
+
+  storage = getStorage(app);
+  functions = getFunctions(app);
+  realtimeDb = getDatabase(app);
+} catch (error) {
+  console.warn('Firebase initialization failed. Running in demo mode without authentication:', error.message);
+  console.warn('To enable Firebase features, add your Firebase credentials to .env file');
+}
+
+export { auth, db, storage, functions, realtimeDb };
 
 // Initialize Analytics and Performance Monitoring in production
-if (process.env.NODE_ENV === 'production') {
+if (app && process.env.NODE_ENV === 'production') {
   getAnalytics(app);
   getPerformance(app);
 }
 
 // Connect to emulators in development
-if (process.env.NODE_ENV === 'development' && process.env.REACT_APP_USE_EMULATORS === 'true') {
+if (app && process.env.NODE_ENV === 'development' && process.env.REACT_APP_USE_EMULATORS === 'true') {
   connectAuthEmulator(auth, 'http://localhost:9099');
   connectFirestoreEmulator(db, 'localhost', 8080);
   connectStorageEmulator(storage, 'localhost', 9199);

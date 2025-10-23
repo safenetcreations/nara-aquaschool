@@ -30,6 +30,8 @@ import {
   EmojiEvents
 } from '@mui/icons-material';
 import LoadingScreen from '../../components/Common/LoadingScreen';
+import { REAL_SL_MARINE_SPECIES } from '../../data/realMarineSpecies';
+import { getSpeciesImage } from '../../services/speciesImageService';
 
 /**
  * SpeciesDetail Component
@@ -50,70 +52,60 @@ const SpeciesDetail = () => {
 
   const loadSpeciesData = async () => {
     try {
-      // TODO: Fetch from Firebase
-      // const speciesData = await getSpeciesById(speciesId);
+      console.log('🔍 Loading species data for:', speciesId);
 
-      // Sample data for testing
-      const sampleSpecies = {
-        id: speciesId,
-        scientificName: 'Balaenoptera musculus',
-        commonName: {
-          en: 'Blue Whale',
-          si: 'නිල් තල්මස්සා',
-          ta: 'நீல திமிங்கலம்'
-        },
-        localNames: ['Maha Thel Massa', 'Neel Thalassa'],
-        category: 'mammals',
-        family: 'Balaenopteridae',
-        genus: 'Balaenoptera',
-        description: {
-          en: 'The Blue Whale is the largest animal ever known to have lived on Earth. These magnificent marine mammals can reach lengths of up to 30 meters and weigh as much as 200 tons.',
-          si: 'නිල් තල්මස්සා මෙතෙක් පෘථිවියේ ජීවත් වූ විශාලතම සත්වයා වේ.',
-          ta: 'நீல திமிங்கலம் உலகில் வாழ்ந்த மிகப்பெரிய விலங்காகும்.'
-        },
-        habitat: ['open_ocean', 'deep_sea'],
-        distribution: {
-          global: 'Found in all major oceans',
-          sriLanka: ['Southern Coast', 'Eastern Coast', 'Trincomalee Waters']
-        },
-        characteristics: {
-          size: '25-30 meters',
-          weight: '100-200 tons',
-          lifespan: '80-90 years',
-          diet: 'Krill (small crustaceans)',
-          reproduction: 'One calf every 2-3 years'
-        },
-        behavior: 'Blue whales are typically solitary or travel in small groups. They communicate using low-frequency sounds.',
-        conservationStatus: 'endangered',
-        threats: ['Ship strikes', 'Ocean noise pollution', 'Climate change', 'Entanglement in fishing gear'],
-        conservationEfforts: 'Protected under international law, whale watching regulations, research and monitoring programs.',
-        funFacts: [
-          'A Blue Whale\'s heart is the size of a small car',
-          'They can eat up to 4 tons of krill per day',
-          'Their calls are the loudest sounds made by any animal',
-          'Newborn calves are already 7 meters long'
-        ],
+      // Find species in real data by ID
+      const foundSpecies = REAL_SL_MARINE_SPECIES.find(s => s.id === speciesId);
+
+      if (!foundSpecies) {
+        console.error('❌ Species not found:', speciesId);
+        setSpecies(null);
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ Found species:', foundSpecies.commonName.en);
+
+      // Try to load AI-generated image for this species
+      const speciesImage = await getSpeciesImage(foundSpecies.commonName.en);
+
+      // Prepare images array - use AI-generated image if available, otherwise use placeholder
+      const images = [];
+      if (speciesImage && speciesImage.imageUrl) {
+        images.push(speciesImage.imageUrl);
+        console.log('🖼️ Using AI-generated image for', foundSpecies.commonName.en);
+      } else {
+        images.push('https://source.unsplash.com/800x600/?marine,' + foundSpecies.id);
+        console.log('📷 Using placeholder image for', foundSpecies.commonName.en);
+      }
+
+      // Map the real species data to the expected format
+      const speciesData = {
+        ...foundSpecies,
+        localNames: foundSpecies.localNames || [],
+        genus: foundSpecies.family || '',
+        behavior: foundSpecies.behavior || `${foundSpecies.commonName.en} can be observed in ${foundSpecies.habitat?.join(', ') || 'various habitats'} around Sri Lanka.`,
+        conservationEfforts: foundSpecies.conservationEfforts || 'Conservation efforts include habitat protection and monitoring programs.',
         importance: {
-          ecological: 'Top predator that maintains ecosystem balance',
-          economic: 'Eco-tourism and whale watching',
-          cultural: 'Featured in Sri Lankan maritime folklore'
+          ecological: `Important species in ${foundSpecies.habitat?.[0] || 'marine'} ecosystems`,
+          economic: foundSpecies.bestSeasons ? `Tourism opportunities, especially during ${foundSpecies.bestSeasons}` : 'Marine tourism value',
+          cultural: 'Significant in Sri Lankan marine biodiversity'
         },
-        images: [
-          'https://source.unsplash.com/800x600/?blue-whale,ocean',
-          'https://source.unsplash.com/800x600/?whale,underwater'
-        ],
+        images: images,
         videos: [],
         relatedSpecies: [],
         references: [],
-        sightings: 245,
-        views: 1542,
+        sightings: Math.floor(Math.random() * 500) + 100,
+        views: Math.floor(Math.random() * 2000) + 500,
         createdAt: new Date(),
         updatedAt: new Date()
       };
 
-      setSpecies(sampleSpecies);
+      setSpecies(speciesData);
+      console.log('✅ Species data loaded successfully');
     } catch (error) {
-      console.error('Error loading species:', error);
+      console.error('❌ Error loading species:', error);
+      setSpecies(null);
     } finally {
       setLoading(false);
     }

@@ -59,6 +59,7 @@ import {
 import { getUserBadges, updateStreak } from '../../services/gamificationService';
 import { getUserSubmissions } from '../../services/citizenScienceService';
 import { getCurrentOceanData } from '../../services/oceanDataService';
+import { getDashboardConfig, getRecommendedActivities, getGradeLevel } from '../../utils/gradeContentAdapter';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
 
@@ -166,11 +167,40 @@ const Dashboard = ({ userProfile }) => {
   const [upcomingEvents, setUpcomingEvents] = useState([]);
   const [recommendations, setRecommendations] = useState([]);
   const [weeklyProgress, setWeeklyProgress] = useState(DEFAULT_WEEKLY_POINTS);
+  const [gradeLevel, setGradeLevel] = useState(null);
+  const [dashboardConfig, setDashboardConfig] = useState(null);
+
+  // Default profile data if userProfile is not available
+  const safeProfile = userProfile || {
+    uid: 'guest',
+    firstName: 'Student',
+    level: 1,
+    points: 0,
+    streak: 0,
+    stats: {
+      lessonsCompleted: 0,
+      quizzesTaken: 0,
+      achievementsUnlocked: 0,
+      timeSpent: 0
+    },
+    progressTracking: {
+      marineLife: 0,
+      freshwater: 0,
+      heritage: 0,
+      naraScience: 0
+    }
+  };
 
   useEffect(() => {
-    if (userProfile) {
-      loadDashboardData();
+    loadDashboardData();
+    if (userProfile?.uid) {
       updateUserStreak();
+    }
+    // Set grade-specific configuration
+    if (safeProfile.grade) {
+      const grade = parseInt(safeProfile.grade) || 7;
+      setGradeLevel(getGradeLevel(grade));
+      setDashboardConfig(getDashboardConfig(grade));
     }
   }, [userProfile]);
 
@@ -178,16 +208,30 @@ const Dashboard = ({ userProfile }) => {
     try {
       setLoading(true);
       
-      // Load user badges
-      const userBadges = await getUserBadges(userProfile.uid);
-      setBadges(userBadges.slice(0, 4)); // Show latest 4 badges
+      // Load user badges if user is logged in
+      if (userProfile?.uid) {
+        try {
+          const userBadges = await getUserBadges(userProfile.uid);
+          setBadges(userBadges.slice(0, 4)); // Show latest 4 badges
+        } catch (err) {
+          console.log('Could not load badges:', err);
+        }
+        
+        // Load citizen science submissions
+        try {
+          const submissions = await getUserSubmissions(userProfile.uid);
+        } catch (err) {
+          console.log('Could not load submissions:', err);
+        }
+      }
       
-      // Load citizen science submissions
-      const submissions = await getUserSubmissions(userProfile.uid);
-      
-      // Load ocean data
-      const currentOceanData = await getCurrentOceanData();
-      setOceanData(currentOceanData[0]); // Show first station data
+      // Load ocean data (available to all)
+      try {
+        const currentOceanData = await getCurrentOceanData();
+        setOceanData(currentOceanData[0]); // Show first station data
+      } catch (err) {
+        console.log('Could not load ocean data:', err);
+      }
       
       // Generate recommendations based on user progress
       generateRecommendations();
@@ -200,11 +244,11 @@ const Dashboard = ({ userProfile }) => {
       
     } catch (error) {
       console.error('Error loading dashboard data:', error);
-      toast.error(t('dashboard.messages.loadError'));
+      // Don't show error toast, just log it
     } finally {
       setLoading(false);
-  }
-};
+    }
+  };
 
   const weeklyChartData = useMemo(() => {
     if (!weeklyProgress) {
@@ -231,10 +275,12 @@ const Dashboard = ({ userProfile }) => {
   );
 
   const updateUserStreak = async () => {
+    if (!userProfile?.uid) return;
+    
     try {
       const result = await updateStreak(userProfile.uid);
       if (result.streak > 1) {
-        toast.success(t('dashboard.messages.streak', { count: result.streak }), {
+        toast.success(t('dashboard.messages.streak', { count: result.streak }) || `🔥 ${result.streak} day streak!`, {
           duration: 3000
         });
       }
@@ -244,12 +290,7 @@ const Dashboard = ({ userProfile }) => {
   };
 
   const generateRecommendations = () => {
-    if (!userProfile) {
-      setRecommendations([]);
-      return;
-    }
-
-    const recs = RECOMMENDATION_DEFS.filter((def) => def.condition(userProfile)).map((def) => ({
+    const recs = RECOMMENDATION_DEFS.filter((def) => def.condition(safeProfile)).map((def) => ({
       id: def.id,
       type: def.type,
       icon: def.icon,
@@ -258,7 +299,7 @@ const Dashboard = ({ userProfile }) => {
       descriptionKey: def.descriptionKey
     }));
 
-    setRecommendations(recs);
+    setRecommendations(recs.slice(0, 4)); // Show max 4 recommendations
   };
 
   const loadUpcomingEvents = () => {
@@ -275,10 +316,10 @@ const Dashboard = ({ userProfile }) => {
 
   const progressChartData = useMemo(() => {
     const values = [
-      userProfile?.progressTracking?.marineLife ?? 25,
-      userProfile?.progressTracking?.freshwater ?? 15,
-      userProfile?.progressTracking?.heritage ?? 10,
-      userProfile?.progressTracking?.naraScience ?? 5
+      safeProfile.progressTracking?.marineLife ?? 25,
+      safeProfile.progressTracking?.freshwater ?? 15,
+      safeProfile.progressTracking?.heritage ?? 10,
+      safeProfile.progressTracking?.naraScience ?? 5
     ];
 
     return {
@@ -296,10 +337,10 @@ const Dashboard = ({ userProfile }) => {
       ]
     };
   }, [
-    userProfile?.progressTracking?.marineLife,
-    userProfile?.progressTracking?.freshwater,
-    userProfile?.progressTracking?.heritage,
-    userProfile?.progressTracking?.naraScience,
+    safeProfile.progressTracking?.marineLife,
+    safeProfile.progressTracking?.freshwater,
+    safeProfile.progressTracking?.heritage,
+    safeProfile.progressTracking?.naraScience,
     t,
     i18n.language
   ]);
@@ -314,7 +355,7 @@ const Dashboard = ({ userProfile }) => {
     }
   };
 
-  const firstName = userProfile?.firstName || userProfile?.displayName || '';
+  const firstName = safeProfile.firstName || safeProfile.displayName || 'Student';
 
   if (loading) {
     return (
@@ -350,24 +391,31 @@ const Dashboard = ({ userProfile }) => {
                 {t('dashboard.welcome.title', { name: firstName })}
               </Typography>
               <Typography variant="body1" sx={{ opacity: 0.9 }}>
-                {userProfile?.streak > 0
-                  ? t('dashboard.welcome.streakMessage', { count: userProfile.streak })
-                  : t('dashboard.welcome.startMessage')}
+                {safeProfile.streak > 0
+                  ? (t('dashboard.welcome.streakMessage', { count: safeProfile.streak }) || `Keep up your ${safeProfile.streak} day streak!`)
+                  : (t('dashboard.welcome.startMessage') || 'Start your learning journey today!')}
               </Typography>
-              <Box sx={{ display: 'flex', gap: 2, mt: 2 }}>
+              <Box sx={{ display: 'flex', gap: 2, mt: 2, flexWrap: 'wrap' }}>
+                {gradeLevel && (
+                  <Chip
+                    icon={<School />}
+                    label={`${gradeLevel.icon} ${gradeLevel.label}`}
+                    sx={{ backgroundColor: 'rgba(255,255,255,0.3)', color: 'white', fontWeight: 600 }}
+                  />
+                )}
                 <Chip
                   icon={<Star />}
-                  label={t('layout.levelLabel', { level: userProfile?.level || 1 })}
+                  label={t('layout.levelLabel', { level: safeProfile.level }) || `Level ${safeProfile.level}`}
                   sx={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}
                 />
                 <Chip
                   icon={<EmojiEvents />}
-                  label={t('dashboard.stats.pointsChip', { points: userProfile?.points || 0 })}
+                  label={t('dashboard.stats.pointsChip', { points: safeProfile.points }) || `${safeProfile.points} Points`}
                   sx={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}
                 />
                 <Chip
                   icon={<LocalFireDepartment />}
-                  label={t('dashboard.stats.streakChip', { count: userProfile?.streak || 0 })}
+                  label={t('dashboard.stats.streakChip', { count: safeProfile.streak }) || `${safeProfile.streak} Day Streak`}
                   sx={{ backgroundColor: 'rgba(255,255,255,0.2)', color: 'white' }}
                 />
               </Box>
@@ -411,11 +459,11 @@ const Dashboard = ({ userProfile }) => {
                   </Typography>
                 </Box>
                 <Typography variant="h4" fontWeight={700}>
-                  {userProfile?.stats?.lessonsCompleted || 0}
+                  {safeProfile.stats?.lessonsCompleted || 0}
                 </Typography>
                 <LinearProgress 
                   variant="determinate" 
-                  value={(userProfile?.stats?.lessonsCompleted || 0) * 10} 
+                  value={Math.min((safeProfile.stats?.lessonsCompleted || 0) * 10, 100)} 
                   sx={{ mt: 2 }}
                 />
               </CardContent>
@@ -440,11 +488,11 @@ const Dashboard = ({ userProfile }) => {
                   </Typography>
                 </Box>
                 <Typography variant="h4" fontWeight={700}>
-                  {userProfile?.stats?.quizzesTaken || 0}
+                  {safeProfile.stats?.quizzesTaken || 0}
                 </Typography>
                 <LinearProgress 
                   variant="determinate" 
-                  value={(userProfile?.stats?.quizzesTaken || 0) * 5} 
+                  value={Math.min((safeProfile.stats?.quizzesTaken || 0) * 5, 100)} 
                   sx={{ mt: 2 }}
                   color="secondary"
                 />
@@ -470,11 +518,11 @@ const Dashboard = ({ userProfile }) => {
                   </Typography>
                 </Box>
                 <Typography variant="h4" fontWeight={700}>
-                  {userProfile?.stats?.speciesIdentified || 0}
+                  {safeProfile.stats?.speciesIdentified || 0}
                 </Typography>
                 <LinearProgress 
                   variant="determinate" 
-                  value={(userProfile?.stats?.speciesIdentified || 0) * 2} 
+                  value={Math.min((safeProfile.stats?.speciesIdentified || 0) * 2, 100)} 
                   sx={{ mt: 2 }}
                   color="warning"
                 />
@@ -500,11 +548,11 @@ const Dashboard = ({ userProfile }) => {
                   </Typography>
                 </Box>
                 <Typography variant="h4" fontWeight={700}>
-                  {userProfile?.stats?.citizenScienceContributions || 0}
+                  {safeProfile.stats?.citizenScienceContributions || 0}
                 </Typography>
                 <LinearProgress 
                   variant="determinate" 
-                  value={(userProfile?.stats?.citizenScienceContributions || 0) * 10} 
+                  value={Math.min((safeProfile.stats?.citizenScienceContributions || 0) * 10, 100)} 
                   sx={{ mt: 2 }}
                   color="error"
                 />

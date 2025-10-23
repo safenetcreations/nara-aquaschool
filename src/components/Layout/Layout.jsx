@@ -55,7 +55,8 @@ import {
   Search,
   Groups,
   TrendingUp,
-  MenuBook
+  MenuBook,
+  AutoAwesome
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { useTranslation } from 'react-i18next';
@@ -94,7 +95,8 @@ const BASE_MENU_ITEMS = [
       { key: 'marine-life', translationKey: 'nav.marineLife', icon: Waves, path: '/marine-life' },
       { key: 'freshwater', translationKey: 'nav.freshwater', icon: Water, path: '/freshwater' },
       { key: 'heritage', translationKey: 'nav.heritage', icon: AccountBalance, path: '/heritage' },
-      { key: 'nara', translationKey: 'nav.naraScience', icon: Science, path: '/nara' }
+      { key: 'nara', translationKey: 'nav.naraScience', icon: Science, path: '/nara' },
+      { key: 'school-directory', translationKey: 'nav.schoolDirectory', icon: School, path: '/school-directory' }
     ]
   },
   {
@@ -168,7 +170,10 @@ const ADMIN_MENU = {
     { key: 'admin-dashboard', translationKey: 'nav.adminDashboard', icon: TrendingUp, path: '/admin' },
     { key: 'admin-content', translationKey: 'nav.contentManager', icon: Science, path: '/admin/content' },
     { key: 'admin-users', translationKey: 'nav.userManagement', icon: Groups, path: '/admin/users' },
-    { key: 'admin-analytics', translationKey: 'nav.analytics', icon: TrendingUp, path: '/admin/analytics' }
+    { key: 'admin-analytics', translationKey: 'nav.analytics', icon: TrendingUp, path: '/admin/analytics' },
+    { key: 'admin-schools', translationKey: 'nav.schoolsManager', icon: School, path: '/admin/schools' },
+    { key: 'admin-ai-generator', translationKey: 'nav.aiContentGenerator', icon: AutoAwesome, path: '/admin/ai-generator' },
+    { key: 'admin-image-generator', translationKey: 'nav.imageGenerator', icon: PhotoLibrary, path: '/admin/image-generator' }
   ]
 };
 
@@ -406,14 +411,14 @@ const Layout = ({ user, userProfile }) => {
             </Typography>
           </Box>
           
-          {/* Language Selector - More Prominent */}
+          {/* Language Selector */}
           <Tooltip title={t('common.changeLanguage')}>
             <Button
               onClick={(e) => setLanguageAnchor(e.currentTarget)}
               startIcon={<Language />}
               variant="outlined"
               size="small"
-              sx={{ 
+              sx={{
                 textTransform: 'uppercase',
                 minWidth: '80px',
                 borderRadius: 2,
@@ -456,7 +461,7 @@ const Layout = ({ user, userProfile }) => {
               </MenuItem>
             ))}
           </Menu>
-          
+
           {/* Theme Toggle */}
           <Tooltip title={t('common.toggleTheme')}>
             <IconButton onClick={() => setDarkMode(!darkMode)}>

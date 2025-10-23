@@ -21,6 +21,7 @@ import {
   School
 } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 
 /**
  * QuizCenter Component
@@ -28,6 +29,7 @@ import { useNavigate } from 'react-router-dom';
  */
 const QuizCenter = () => {
   const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
   const [quizzes, setQuizzes] = useState([]);
   const [stats, setStats] = useState({
     quizzesTaken: 12,
@@ -36,100 +38,77 @@ const QuizCenter = () => {
     totalPoints: 360
   });
 
+  const baseQuizzes = [
+    {
+      id: 'marineMammals',
+      questions: 15,
+      duration: 20,
+      points: 150,
+      completed: true,
+      score: 90,
+      image: 'https://source.unsplash.com/400x300/?whale,ocean'
+    },
+    {
+      id: 'coralReefs',
+      questions: 10,
+      duration: 15,
+      points: 100,
+      completed: false,
+      image: 'https://source.unsplash.com/400x300/?coral,reef'
+    },
+    {
+      id: 'waterHeritage',
+      questions: 20,
+      duration: 30,
+      points: 200,
+      completed: false,
+      image: 'https://source.unsplash.com/400x300/?sri-lanka,water'
+    },
+    {
+      id: 'freshwaterFish',
+      questions: 12,
+      duration: 18,
+      points: 120,
+      completed: true,
+      score: 75,
+      image: 'https://source.unsplash.com/400x300/?freshwater,fish'
+    },
+    {
+      id: 'oceanConservation',
+      questions: 10,
+      duration: 15,
+      points: 100,
+      completed: false,
+      image: 'https://source.unsplash.com/400x300/?ocean,conservation'
+    },
+    {
+      id: 'naraResearch',
+      questions: 15,
+      duration: 25,
+      points: 150,
+      completed: false,
+      image: 'https://source.unsplash.com/400x300/?research,laboratory'
+    }
+  ];
+
+  const categories = t('quiz.categories', { returnObjects: true }) || {};
+  const difficultyLabels = t('quiz.difficultyLabels', { returnObjects: true }) || {};
+  const difficultyColors = {
+    easy: 'success',
+    medium: 'warning',
+    hard: 'error'
+  };
+
   useEffect(() => {
-    loadQuizzes();
-  }, []);
+    const cardText = t('quiz.cards', { returnObjects: true }) || {};
+    const mapped = baseQuizzes.map((quiz) => ({
+      ...quiz,
+      ...(cardText[quiz.id] || {})
+    }));
+    setQuizzes(mapped);
+  }, [i18n.language, t]);
 
-  const loadQuizzes = () => {
-    // Sample quiz data
-    const sampleQuizzes = [
-      {
-        id: 1,
-        title: 'Marine Mammals of Sri Lanka',
-        description: 'Test your knowledge about whales, dolphins, and other marine mammals',
-        category: 'Marine Life',
-        difficulty: 'Medium',
-        questions: 15,
-        duration: 20,
-        points: 150,
-        completed: true,
-        score: 90,
-        image: 'https://source.unsplash.com/400x300/?whale,ocean'
-      },
-      {
-        id: 2,
-        title: 'Coral Reef Ecosystems',
-        description: 'Learn about the diverse life in coral reefs',
-        category: 'Marine Life',
-        difficulty: 'Easy',
-        questions: 10,
-        duration: 15,
-        points: 100,
-        completed: false,
-        image: 'https://source.unsplash.com/400x300/?coral,reef'
-      },
-      {
-        id: 3,
-        title: 'Sri Lankan Water Heritage',
-        description: 'Ancient irrigation systems and water management',
-        category: 'Heritage',
-        difficulty: 'Hard',
-        questions: 20,
-        duration: 30,
-        points: 200,
-        completed: false,
-        image: 'https://source.unsplash.com/400x300/?sri-lanka,water'
-      },
-      {
-        id: 4,
-        title: 'Freshwater Fish Species',
-        description: 'Identify fish species in Sri Lankan rivers and lakes',
-        category: 'Freshwater',
-        difficulty: 'Medium',
-        questions: 12,
-        duration: 18,
-        points: 120,
-        completed: true,
-        score: 75,
-        image: 'https://source.unsplash.com/400x300/?freshwater,fish'
-      },
-      {
-        id: 5,
-        title: 'Ocean Conservation',
-        description: 'Understanding threats and conservation efforts',
-        category: 'Conservation',
-        difficulty: 'Easy',
-        questions: 10,
-        duration: 15,
-        points: 100,
-        completed: false,
-        image: 'https://source.unsplash.com/400x300/?ocean,conservation'
-      },
-      {
-        id: 6,
-        title: 'NARA Research Projects',
-        description: 'Learn about ongoing research at NARA',
-        category: 'Science',
-        difficulty: 'Hard',
-        questions: 15,
-        duration: 25,
-        points: 150,
-        completed: false,
-        image: 'https://source.unsplash.com/400x300/?research,laboratory'
-      }
-    ];
-
-    setQuizzes(sampleQuizzes);
-  };
-
-  const getDifficultyColor = (difficulty) => {
-    const colors = {
-      Easy: 'success',
-      Medium: 'warning',
-      Hard: 'error'
-    };
-    return colors[difficulty] || 'default';
-  };
+  const getDifficultyColor = (difficulty) => difficultyColors[difficulty] || 'default';
 
   const handleStartQuiz = (quizId) => {
     navigate(`/quiz/${quizId}`);
@@ -142,32 +121,32 @@ const QuizCenter = () => {
         <Box sx={{ marginBottom: 4 }}>
           <Typography variant="h3" fontWeight="bold" gutterBottom>
             <Quiz sx={{ fontSize: 40, verticalAlign: 'middle', marginRight: 2 }} />
-            Quiz Center
+            {t('quiz.title')}
           </Typography>
           <Typography variant="body1" color="text.secondary">
-            Test your knowledge and earn points by completing quizzes
+            {t('quiz.subtitle')}
           </Typography>
         </Box>
 
         {/* Stats Grid */}
         <Grid container spacing={3} sx={{ marginBottom: 4 }}>
           <Grid item xs={6} md={3}>
-            <StatsCard icon={<Quiz />} label="Quizzes Taken" value={stats.quizzesTaken} color="primary" />
+            <StatsCard icon={<Quiz />} label={t('quiz.stats.quizzesTaken')} value={stats.quizzesTaken} color="primary" />
           </Grid>
           <Grid item xs={6} md={3}>
-            <StatsCard icon={<TrendingUp />} label="Average Score" value={`${stats.averageScore}%`} color="secondary" />
+            <StatsCard icon={<TrendingUp />} label={t('quiz.stats.averageScore')} value={`${stats.averageScore}%`} color="secondary" />
           </Grid>
           <Grid item xs={6} md={3}>
-            <StatsCard icon={<CheckCircle />} label="Perfect Scores" value={stats.perfectScores} color="success" />
+            <StatsCard icon={<CheckCircle />} label={t('quiz.stats.perfectScores')} value={stats.perfectScores} color="success" />
           </Grid>
           <Grid item xs={6} md={3}>
-            <StatsCard icon={<EmojiEvents />} label="Total Points" value={stats.totalPoints} color="warning" />
+            <StatsCard icon={<EmojiEvents />} label={t('quiz.stats.totalPoints')} value={stats.totalPoints} color="warning" />
           </Grid>
         </Grid>
 
         {/* Quiz Grid */}
         <Typography variant="h5" fontWeight="bold" gutterBottom sx={{ marginBottom: 2 }}>
-          Available Quizzes
+          {t('quiz.listTitle')}
         </Typography>
 
         <Grid container spacing={3}>
@@ -198,7 +177,7 @@ const QuizCenter = () => {
                 >
                   {quiz.completed && (
                     <Chip
-                      label={`${quiz.score}%`}
+                      label={t('quiz.chips.score', { score: quiz.score ?? 0 })}
                       color="success"
                       sx={{
                         position: 'absolute',
@@ -209,7 +188,7 @@ const QuizCenter = () => {
                     />
                   )}
                   <Chip
-                    label={quiz.difficulty}
+                    label={difficultyLabels[quiz.difficulty] || quiz.difficulty}
                     color={getDifficultyColor(quiz.difficulty)}
                     size="small"
                     sx={{
@@ -232,19 +211,19 @@ const QuizCenter = () => {
                   <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap', marginBottom: 1 }}>
                     <Chip
                       icon={<School />}
-                      label={quiz.category}
+                      label={categories[quiz.category] || quiz.category}
                       size="small"
                       variant="outlined"
                     />
                     <Chip
                       icon={<Quiz />}
-                      label={`${quiz.questions} questions`}
+                      label={t('quiz.meta.questions', { count: quiz.questions })}
                       size="small"
                       variant="outlined"
                     />
                     <Chip
                       icon={<Timer />}
-                      label={`${quiz.duration} min`}
+                      label={t('quiz.meta.duration', { minutes: quiz.duration })}
                       size="small"
                       variant="outlined"
                     />
@@ -258,7 +237,7 @@ const QuizCenter = () => {
                     onClick={() => handleStartQuiz(quiz.id)}
                     sx={{ fontWeight: 'bold' }}
                   >
-                    {quiz.completed ? 'Retake Quiz' : 'Start Quiz'} (+{quiz.points} pts)
+                    {`${quiz.completed ? t('quiz.buttons.retake') : t('quiz.buttons.start')} (+${quiz.points} ${t('common.points')})`}
                   </Button>
                 </CardActions>
               </Card>
