@@ -385,7 +385,7 @@ const Home = () => {
                   variant="contained"
                   size="large"
                   endIcon={<ArrowForward />}
-                  onClick={() => navigate('/register')}
+                  onClick={() => navigate('/dashboard')}
                   sx={{
                     bgcolor: '#FFD700',
                     color: '#0D47A1',

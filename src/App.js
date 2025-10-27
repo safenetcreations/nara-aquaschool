@@ -4,8 +4,6 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { Toaster } from 'react-hot-toast';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from './config/firebase';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './config/i18n';
 import { TwentyFirstToolbar } from '@21st-extension/toolbar-react';
@@ -14,7 +12,6 @@ import { AuthProvider } from './contexts/AuthContext';
 
 // Layout Components
 import Layout from './components/Layout/Layout';
-import LoadingScreen from './components/Common/LoadingScreen';
 import ErrorBoundary from './components/Common/ErrorBoundary';
 
 // Auth Components
@@ -41,6 +38,9 @@ import GamesHub from './pages/Games/GamesHub';
 import QuizCenter from './pages/Quiz/QuizCenter';
 import CitizenScience from './pages/CitizenScience/CitizenScience';
 import Challenges from './pages/Challenges/Challenges';
+
+// Flashcard System
+import FlashcardManager from './components/Flashcards/FlashcardManager';
 
 // Student Features
 import StudentProfile from './pages/StudentProfile/StudentProfile';
@@ -182,14 +182,37 @@ const theme = createTheme({
 
 function App() {
   // Handle case where Firebase/auth is not initialized
-  const [user, loading, error] = useAuthState(auth || null);
-  const [userProfile, setUserProfile] = useState(null);
+  const [user, setUser] = useState({
+    uid: 'dev-user-123',
+    email: 'dev@nara-aquaschool.lk',
+    displayName: 'Development Student',
+    photoURL: null
+  }); // Default development user
+  const [userProfile, setUserProfile] = useState({
+    uid: 'dev-user-123',
+    firstName: 'Development',
+    lastName: 'Student',
+    email: 'dev@nara-aquaschool.lk',
+    grade: '8',
+    level: 5,
+    points: 1250,
+    streak: 7,
+    stats: {
+      lessonsCompleted: 23,
+      quizzesTaken: 15,
+      achievementsUnlocked: 8,
+      timeSpent: 480,
+      speciesIdentified: 12,
+      citizenScienceContributions: 5
+    },
+    progressTracking: {
+      marineLife: 75,
+      freshwater: 45,
+      heritage: 60,
+      naraScience: 30
+    }
+  }); // Default development profile
   
-  // Skip auth state if Firebase is not configured
-  if (!auth) {
-    console.warn('⚠️ Firebase not configured. Running in demo mode without authentication.');
-  }
-
   // Initialize language from storage or default to English
   useEffect(() => {
     const cachedLang = localStorage.getItem('i18nextLng');
@@ -199,26 +222,27 @@ function App() {
     }
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      // Fetch user profile from Firestore
-      fetchUserProfile(user.uid);
-    }
-  }, [user]);
+  // Development mode - no authentication needed
+  // useEffect(() => {
+  //   if (user) {
+  //     fetchUserProfile(user.uid);
+  //   }
+  // }, [user]);
 
-  const fetchUserProfile = async (uid) => {
-    try {
-      // Implementation will be in userService.js
-      // const profile = await getUserProfile(uid);
-      // setUserProfile(profile);
-    } catch (error) {
-      console.error('Error fetching user profile:', error);
-    }
-  };
+  // const fetchUserProfile = async (uid) => {
+  //   try {
+  //     // Implementation will be in userService.js
+  //     // const profile = await getUserProfile(uid);
+  //     // setUserProfile(profile);
+  //   } catch (error) {
+  //     console.error('Error fetching user profile:', error);
+  //   }
+  // };
 
-  if (loading) {
-    return <LoadingScreen />;
-  }
+  // Development mode - always ready
+  // if (loading) {
+  //   return <LoadingScreen />;
+  // }
 
   return (
     <ErrorBoundary>
@@ -240,14 +264,15 @@ function App() {
               }}
             />
             <Routes>
-              {/* Public Routes - No Layout */}
+              {/* Development Mode - Direct Access */}
               <Route path="/" element={<Home />} />
-              <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
-              <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
-              <Route path="/forgot-password" element={<ForgotPassword />} />
-              <Route path="/verify-email" element={<VerifyEmail />} />
+              {/* <Route path="/" element={<Navigate to="/dashboard" />} /> */}
+              {/* <Route path="/login" element={!user ? <Login /> : <Navigate to="/dashboard" />} /> */}
+              {/* <Route path="/register" element={!user ? <Register /> : <Navigate to="/dashboard" />} /> */}
+              {/* <Route path="/forgot-password" element={<ForgotPassword />} /> */}
+              {/* <Route path="/verify-email" element={<VerifyEmail />} /> */}
 
-              {/* Main App Routes with Layout (Sidebar) */}
+              {/* Main App Routes with Layout (Sidebar) - No Auth Required in Development */}
               <Route element={<Layout user={user} userProfile={userProfile} />}>
 
                 {/* Public Routes - All students can access */}
@@ -280,6 +305,8 @@ function App() {
                   <Route path="games">
                     <Route index element={<GamesHub />} />
                   </Route>
+
+                  <Route path="flashcards" element={<FlashcardManager />} />
 
                   <Route path="quiz">
                     <Route index element={<QuizCenter />} />

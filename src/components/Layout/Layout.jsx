@@ -106,6 +106,7 @@ const BASE_MENU_ITEMS = [
     public: true,
     children: [
       { key: 'games', translationKey: 'nav.gamesHub', icon: Games, path: '/games' },
+      { key: 'flashcards', translationKey: 'nav.flashcards', icon: MenuBook, path: '/flashcards' },
       { key: 'quiz', translationKey: 'nav.quizCenter', icon: Quiz, path: '/quiz' },
       { key: 'challenges', translationKey: 'nav.challenges', icon: EmojiEvents, path: '/challenges' },
       { key: 'citizen-science', translationKey: 'nav.citizenScience', icon: Groups, path: '/citizen-science' }

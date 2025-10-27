@@ -41,7 +41,8 @@ import {
   Notifications,
   PlayCircle,
   CheckCircle,
-  Lock
+  Lock,
+  Psychology
 } from '@mui/icons-material';
 import { motion } from 'framer-motion';
 import { Line, Doughnut } from 'react-chartjs-2';
@@ -135,6 +136,15 @@ const RECOMMENDATION_DEFS = [
     path: '/live-data/cameras',
     titleKey: 'dashboard.recommendations.liveCameras.title',
     descriptionKey: 'dashboard.recommendations.liveCameras.description',
+    condition: () => true
+  },
+  {
+    id: 'flashcards',
+    type: 'game',
+    icon: Psychology,
+    path: '/flashcards',
+    titleKey: 'dashboard.recommendations.flashcards.title',
+    descriptionKey: 'dashboard.recommendations.flashcards.description',
     condition: () => true
   }
 ];
